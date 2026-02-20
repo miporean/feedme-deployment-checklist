@@ -1,0 +1,79 @@
+Timestamp,Merchant Name,Device ,Wi-Fi Name (SSID),Static IP for Device,Anydesk ID,Printer IP,Windows Setup Checklist ,Sunmi Device Setup Checklist,Device Serial Number,Settings Checklist
+11/20/2025 15:35:40,Kobe,Sunmi Device,Ethernet,192.168.0.10,,"Cashier (USB)
+Bar (192.168.0.21)
+Kitchen (192.168.0.20)",,DP02256A10509,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item / Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+11/21/2025 14:30:46,Ayatt,Sunmi Device,Concierge,192.168.0.200,,"Cashier (Bluetooth)
+Kitchen (192.168.0.210)",,VC19253T20013,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item / Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+11/27/2025 13:12:35,MammaBunz,Sunmi Device,pending wifi,pending wifi,,Printer (Bluetooth),,VC19253S20240,,"Printer Connection, Configure Custom Item / Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+12/3/2025 11:44:21,Restoran Ayam Geprek Asli,Sunmi Device,Ethernet,192.168.0.150,,"Cashier (USB)
+Kitchen (192.168.0.160)",,DP02256A10534,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item / Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+12/4/2025 15:40:11,Selero Kampung,Sunmi Device,Eternal ,192.168.1.150,,"Cashier (USB)
+Bar (192.168.1.160)",,DP02256A10190,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item / Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+12/5/2025 11:20:30,Buah,Window,Ethernet,192.168.100.28,,"Printer 1 (USB)
+Printer 2 (USB)","Install Anydesk, Turn off Firewall",,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item / Pax, Customer Display, Close Counter (Report)"
+12/5/2025 13:58:46,Buah,Window,Ethernet,192.168.100.28,,"Printer 1 (USB)
+Printer 2 (USB)","Install Anydesk, Turn off Firewall",,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item / Pax, Customer Display, Close Counter (Report)"
+12/5/2025 14:41:43,Teahaus,Sunmi Device,Ethernet ,10.28.2.150,,"Cashier (USB)
+Bar (10.28.2.160)
+Kitchen (10.28.2.161)",,DP02256A10151,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item / Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+12/6/2025 12:11:40,Lidah Manja,Sunmi Device,sinopal,192.168.50.150,,"Cashier (192.168.50.249)
+Kitchen (192.168.50.247)",,DP02256A10156,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item / Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+12/12/2025 10:55:02,Ayam Gepuk Tok Mat Bangi,Sunmi Device,Ethernet ,192.168.0.200,1302903252,"Cashier (USB)
+Kitchen (192.168.0.201)
+Bar (192.168.0.202)
+Platform (192.168.0.203)",,DP02256A10123,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item / Pax, Customer Display, Close Counter (Report)"
+12/15/2025 15:02:34,Sudu Kayu,Sunmi Device,sudukayu,192.168.0.50,,"Cashier (USB)
+Built-in (Bluetooth)
+Kitchen (192.168.0.51)",,"Sunmi D3 Pro - DP02256A11349, Sunmi V3 Mix - VC19253W20497",,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+12/19/2025 12:16:51,Selera Mawar Utara,Sunmi Device,Sim Card (Pending),Pending,,Cashier (Bluetooth),,VC19253W20452,,"Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Close Counter (Report)"
+12/22/2025 9:55:48,Ayam Gepuk Tok Mat Cheras Trader Square,Sunmi Device,Ethernet,192.168.0.200,,"Cashier (Bluetooth)
+Kitchen (192.168.0.201)
+Bar (192.168.0.205)",,VC19253W20440,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Enable QR Order / Delivery Platform, Close Counter (Report)"
+12/29/2025 11:27:33,Ayam Gepuk Presiden,Sunmi Device,AYAM_GEPUK_PRESIDENT_2.4G,192.168.0.211,,"Kitchen Printer 192.168.0.212
+Bar Printer 192.168.0.213",,DP02256GJ0089,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/7/2026 13:03:52,Santai D'Zara,Sunmi Device,santaidzara_2.4 GHz,192.168.0.200,1511829110,"Cashier (USB) 
+Kitchen (192.168.0.221)
+Bar (192.168.0.224)
+Roti (Bluetooth)",,Enable Remote Assistance,DP02256GJ0179,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/8/2026 12:14:57,Ayam Gepuk Presiden (Bandar Serai Impian),Sunmi Device,WiFi Router no yet ready,192.168.0.218 (Lan Configuration),1280197931,"Kitchen Printer - 192.168.0.212
+Bar Printer - 192.168.0.213",,Enable Remote Assistance,DP02256A10156,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/8/2026 12:17:09,Naseeb Capati,Sunmi Device,WiFi Router no yet ready,192.168.0.218,1148958645,Kitchen Printer - 192.168.0.212,,Enable Remote Assistance,DP02256GJ0484,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/9/2026 16:28:29,Meet Ditan Hotpot,Sunmi Device,Ethernet,192.168.0.210,1242555563,"Cashier (USB)
+Kitchen (192.168.0.215)
+Bar (192.168.0.216)",,Enable Remote Assistance,DP02256GJ0255,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/12/2026 12:08:19,Ayam Gepuk Tok Mat (Nilai),Sunmi Device,Ethernet ,192.168.1.220,1858100439,"Cashier (USB)
+Bar Printer (192.168.1.225)
+Kitchen Printer (192.168.1.226)
+Platform/Take Away Printer (192.168.1.227)",,Enable Remote Assistance,DP02256GJ0031,"Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/14/2026 16:52:06,Machi Mee,Lenovo Tablet ,machimee@unifi,192.168.1.220,1111858461,"Bar (192.168.0.201)
+Kitchen 1 (192.168.0.202)
+Kitchen 2 (192.168.0.203)",,,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/15/2026 15:55:59,Cha Bang Ang,Sunmi Device,Sim Card,Sim Card,383742319,"Cashier (Bluetooth)
+Label (USB)",,Enable Remote Assistance,VC19253U20012,"Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/19/2026 17:08:51,AYAM GEPUK TOK MAT (KOTA WARISAN),Sunmi Device,attmkw,192.168.0.210,1862780529,"Cashier Printer (USB)
+Bar Printer (192.168.0.212)
+Kitchen Printer (192.168.0.213)",,Enable Remote Assistance,DP02256GJ0457,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/20/2026 14:25:12,Ayam Gepuk Tok Mat （TTDI）,Sunmi Device,AGTM2.4,192.168.0.210,1485819011,"Cashier Printer - USB
+BAR PRINTER - 192.168.0.216
+KITCHEN PRINTER - 192.168.0.212",,Enable Remote Assistance,DP02256GJ0388,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/21/2026 18:32:47,Jiu Ding Ji 玖鼎记 (Ara Damansara),Sunmi Device,JDJ,192.168.1.192,1027603378,"Bar (192.168.1.203), Kitchen (192.168.1.208), Dimsum (192.168.1.202), Dessert (192.168.1.201), Checklist (USB), Cashier (192.168.1.211)",,Enable Remote Assistance,DP02256GJ0486,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/24/2026 10:27:34,Gulai & Kopi (Subang Jaya),Sunmi Device,Gulai & Kopi,192.168.0.200,931301527,"Cashier Printer - USB
+Kitchen Printer - 192.168.0.212
+Bar Printer - 192.168.0.213",,Enable Remote Assistance,DP02256GJ0535,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/27/2026 11:39:12,Born Neo*,Sunmi Device,-,-,"1269612916, 1990211430, 1764129840","Cashier (Bluetooth)
+Kitchen (USB)",,Enable Remote Assistance,"VC19253W20096, VC19253T20050, VC19253W20127","Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Enable QR Order / Delivery Platform, Close Counter (Report)"
+1/29/2026 15:23:04,Keria Satu Enterprise,Sunmi Device,-,-,562808266,Cashier (Bluetooth),,Enable Remote Assistance,VA5825B341337,"Printer Connection, Configure Custom Item, Configure Pax, Enable QR Order / Delivery Platform"
+1/29/2026 16:17:23,Haz,Sunmi Device,-,-,1648871245,"Cashier (USB)
+Label (USB)",,Enable Remote Assistance,DP02256GJ0184,"Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+2/3/2026 15:52:59,Tlaaks ,Sunmi Device,-,-,1015508308,"Cashier (Bluetooth)
+Label (USB)",,Enable Remote Assistance,VC19254720064,"Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Enable QR Order / Delivery Platform, Close Counter (Report)"
+2/5/2026 10:28:13,Steak House,Sunmi Device,Pending ,192.168.0.210 ,285687394,"Cashier (USB)
+Kitchen (192.168.0.212)",,Enable Remote Assistance,DP02256GJ0259,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+2/7/2026 11:07:01,RESTAURANT TEAHAUS SDN. BHD. Puchong,Sunmi Device,Ethernet,192.168.0.210,245139737,"Cashier & Checklist (USB)
+Kitchen (192.168.0.215)
+Bar (192.168.0.216)",,Enable Remote Assistance,DP02256GJ0096,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Customer Display, Enable QR Order / Delivery Platform, Close Counter (Report)"
+2/14/2026 11:19:54,Yum Momos,"iPad, Cashier Printer (Gilong GL-R80A), Kitchen Printer (CN811-UWB)",Yummomos,192.168.100.210,1083648017,"Cashier (192.168.100.36)
+Kitchen 1 (192.168.100.38)
+Kitchen 2 (192.168.100.28)
+Kitchen 3 (192.168.100.40)
+Kitchen 4 (192.168.100.128)",,,,"Socket Server IP, Printer Connection, Configure Payment Method, Configure Custom Item, Configure Pax, Enable QR Order / Delivery Platform, Close Counter (Report)"

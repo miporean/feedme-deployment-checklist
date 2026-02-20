@@ -23,6 +23,12 @@ export default function DeploymentHistory({ showToast }) {
     const [saving, setSaving] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
     const [expandedPhoto, setExpandedPhoto] = useState(null)
+    const [sortField, setSortField] = useState('created_at')
+    const [sortDir, setSortDir] = useState('desc')
+    const [showPasswordPrompt, setShowPasswordPrompt] = useState(false)
+    const [passwordInput, setPasswordInput] = useState('')
+    const [passwordError, setPasswordError] = useState('')
+    const [pendingAction, setPendingAction] = useState(null)
 
     const fetchData = useCallback(async () => {
         setLoading(true)
@@ -94,6 +100,26 @@ export default function DeploymentHistory({ showToast }) {
         }
     }
 
+    // Password-protected actions
+    const requestPassword = (action) => {
+        setPendingAction(() => action)
+        setPasswordInput('')
+        setPasswordError('')
+        setShowPasswordPrompt(true)
+    }
+
+    const verifyPassword = () => {
+        if (passwordInput === 'Mipos123') {
+            setShowPasswordPrompt(false)
+            setPasswordInput('')
+            setPasswordError('')
+            if (pendingAction) pendingAction()
+            setPendingAction(null)
+        } else {
+            setPasswordError('Incorrect password')
+        }
+    }
+
     const startEdit = (row) => {
         setEditing(true)
         setEditForm({ ...row })
@@ -146,6 +172,41 @@ export default function DeploymentHistory({ showToast }) {
             timeZone: 'Asia/Kuala_Lumpur'
         })
     }
+
+    // Sorting
+    const handleSort = (field) => {
+        if (sortField === field) {
+            setSortDir(prev => prev === 'asc' ? 'desc' : 'asc')
+        } else {
+            setSortField(field)
+            setSortDir(field === 'created_at' ? 'desc' : 'asc')
+        }
+    }
+
+    const SortIcon = ({ field }) => {
+        if (sortField !== field) return <span style={{ opacity: 0.3, marginLeft: 4, fontSize: 11 }}>⇅</span>
+        return <span style={{ marginLeft: 4, fontSize: 11 }}>{sortDir === 'asc' ? '▲' : '▼'}</span>
+    }
+
+    const sortedData = [...data].sort((a, b) => {
+        let valA, valB
+        if (sortField === 'merchant_name') {
+            valA = (a.merchant_name || '').toLowerCase()
+            valB = (b.merchant_name || '').toLowerCase()
+        } else if (sortField === 'device_type') {
+            valA = (a.device_type || '').toLowerCase()
+            valB = (b.device_type || '').toLowerCase()
+        } else if (sortField === 'created_at') {
+            valA = a.created_at || ''
+            valB = b.created_at || ''
+        } else {
+            valA = a[sortField] || ''
+            valB = b[sortField] || ''
+        }
+        if (valA < valB) return sortDir === 'asc' ? -1 : 1
+        if (valA > valB) return sortDir === 'asc' ? 1 : -1
+        return 0
+    })
 
     const CheckMark = ({ value }) => (
         value ? <span className="check-icon">✓</span> : <span className="cross-icon">—</span>
@@ -230,12 +291,17 @@ export default function DeploymentHistory({ showToast }) {
                     <table className="table">
                         <thead>
                             <tr>
-                                <th>#</th><th>Merchant</th><th>Device</th><th>Wi-Fi / IP</th>
-                                <th>Anydesk</th><th>Checklist</th><th>Date</th><th>Actions</th>
+                                <th>#</th>
+                                <th onClick={() => handleSort('merchant_name')} style={{ cursor: 'pointer', userSelect: 'none' }}>Merchant<SortIcon field="merchant_name" /></th>
+                                <th onClick={() => handleSort('device_type')} style={{ cursor: 'pointer', userSelect: 'none' }}>Device<SortIcon field="device_type" /></th>
+                                <th>Wi-Fi / IP</th>
+                                <th>Anydesk</th><th>Checklist</th>
+                                <th onClick={() => handleSort('created_at')} style={{ cursor: 'pointer', userSelect: 'none' }}>Date<SortIcon field="created_at" /></th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {data.map((row, i) => (
+                            {sortedData.map((row, i) => (
                                 <tr key={row.id}>
                                     <td>{i + 1}</td>
                                     <td><strong>{row.merchant_name}</strong></td>
@@ -256,8 +322,8 @@ export default function DeploymentHistory({ showToast }) {
                                     <td>
                                         <div style={{ display: 'flex', gap: 6 }}>
                                             <button className="btn btn--secondary btn--sm" onClick={() => openDetail(row)} title="View">👁️</button>
-                                            <button className="btn btn--secondary btn--sm" onClick={() => { openDetail(row).then(() => { }); setTimeout(() => startEdit(row), 300); }} title="Edit" style={{ background: 'rgba(249,115,22,0.08)', borderColor: 'rgba(249,115,22,0.2)' }}>✏️</button>
-                                            <button className="btn btn--danger btn--sm" onClick={() => handleDelete(row.id)} title="Delete">🗑️</button>
+                                            <button className="btn btn--secondary btn--sm" onClick={() => requestPassword(() => { openDetail(row); setTimeout(() => startEdit(row), 300); })} title="Edit" style={{ background: 'rgba(249,115,22,0.08)', borderColor: 'rgba(249,115,22,0.2)' }}>✏️</button>
+                                            <button className="btn btn--danger btn--sm" onClick={() => requestPassword(() => handleDelete(row.id))} title="Delete">🗑️</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -388,8 +454,8 @@ export default function DeploymentHistory({ showToast }) {
                                 </>
                             ) : (
                                 <>
-                                    <button className="btn btn--primary" onClick={() => startEdit(selected)}>✏️ Edit</button>
-                                    <button className="btn btn--danger" onClick={() => handleDelete(selected.id)}>🗑️ Delete Record</button>
+                                    <button className="btn btn--primary" onClick={() => requestPassword(() => startEdit(selected))}>✏️ Edit</button>
+                                    <button className="btn btn--danger" onClick={() => requestPassword(() => handleDelete(selected.id))}>🗑️ Delete Record</button>
                                     <button className="btn btn--secondary" onClick={closeModal}>Close</button>
                                 </>
                             )}
@@ -427,6 +493,36 @@ export default function DeploymentHistory({ showToast }) {
                                 {saving ? <><span className="spinner" /> Saving...</> : '✅ Yes, Save'}
                             </button>
                             <button className="btn btn--secondary" onClick={() => setShowConfirm(false)}>❌ No, Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Password Prompt Dialog */}
+            {showPasswordPrompt && (
+                <div className="modal-overlay" style={{ zIndex: 70 }} onClick={() => setShowPasswordPrompt(false)}>
+                    <div className="modal" style={{ maxWidth: 380, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ fontSize: 48, marginBottom: 12 }}>🔒</div>
+                        <h3 style={{ marginBottom: 6 }}>Password Required</h3>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: 16, fontSize: 13 }}>
+                            Enter password to continue
+                        </p>
+                        <input
+                            className="input"
+                            type="password"
+                            placeholder="Enter password"
+                            value={passwordInput}
+                            onChange={e => { setPasswordInput(e.target.value); setPasswordError('') }}
+                            onKeyDown={e => e.key === 'Enter' && verifyPassword()}
+                            autoFocus
+                            style={{ marginBottom: 8, textAlign: 'center', fontSize: 15 }}
+                        />
+                        {passwordError && (
+                            <p style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 8 }}>{passwordError}</p>
+                        )}
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 8 }}>
+                            <button className="btn btn--primary" onClick={verifyPassword}>✅ Confirm</button>
+                            <button className="btn btn--secondary" onClick={() => setShowPasswordPrompt(false)}>Cancel</button>
                         </div>
                     </div>
                 </div>
