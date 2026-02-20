@@ -3,6 +3,7 @@ import { useState } from 'react'
 const INITIAL_FORM = {
     merchant_name: '',
     device_type: '',
+    other_device_type: '',
     wifi_ssid: '',
     static_ip: '',
     anydesk_id: '',
@@ -133,6 +134,7 @@ export default function DeploymentForm({ onSuccess }) {
         if (step.key === 'info') {
             if (!form.merchant_name.trim()) errs.merchant_name = true
             if (!form.device_type) errs.device_type = true
+            if (form.device_type === 'Other' && !form.other_device_type.trim()) errs.other_device_type = true
         }
         if (step.key === 'device') {
             if (!form.wifi_ssid.trim()) errs.wifi_ssid = true
@@ -162,9 +164,11 @@ export default function DeploymentForm({ onSuccess }) {
         try {
             const payload = {
                 ...form,
+                device_type: form.device_type === 'Other' ? form.other_device_type.trim() : form.device_type,
                 device_photos: devicePhotos.map(p => ({ filename: p.filename, data: p.data })),
                 printer_photos: printerPhotos.map(p => ({ filename: p.filename, data: p.data })),
             }
+            delete payload.other_device_type
             const res = await fetch('/api/deployments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -254,10 +258,23 @@ export default function DeploymentForm({ onSuccess }) {
                                 <label key={opt} className={`radio-option ${form.device_type === opt ? 'radio-option--selected' : ''}`}>
                                     <input type="radio" name="device_type" checked={form.device_type === opt} onChange={() => { set('device_type', opt); setCurrentStep(0); }} />
                                     <span className="radio-option__label">{opt}</span>
+                                    {opt === 'Other' && form.device_type === 'Other' && (
+                                        <input
+                                            className={`input ${errors.other_device_type ? 'input--error' : ''}`}
+                                            type="text"
+                                            placeholder="Please specify device type"
+                                            value={form.other_device_type}
+                                            onChange={e => set('other_device_type', e.target.value)}
+                                            onClick={e => e.stopPropagation()}
+                                            style={{ marginLeft: 8, flex: 1, fontSize: 13, padding: '6px 10px' }}
+                                            autoFocus
+                                        />
+                                    )}
                                 </label>
                             ))}
                         </div>
                         {errors.device_type && <div className="form-group__hint" style={{ color: 'var(--error)' }}>Please select a device type</div>}
+                        {errors.other_device_type && <div className="form-group__hint" style={{ color: 'var(--error)' }}>Please specify the device type</div>}
                     </div>
                 </div>
             )}
