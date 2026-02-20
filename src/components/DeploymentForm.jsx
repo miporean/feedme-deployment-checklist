@@ -250,7 +250,7 @@ export default function DeploymentForm({ onSuccess }) {
                     <div className="form-group">
                         <label className="form-group__label form-group__label--required">Device</label>
                         <div className="radio-group">
-                            {['Sunmi Device', 'Window', 'Other'].map(opt => (
+                            {['Sunmis Device', 'Window', 'Other'].map(opt => (
                                 <label key={opt} className={`radio-option ${form.device_type === opt ? 'radio-option--selected' : ''}`}>
                                     <input type="radio" name="device_type" checked={form.device_type === opt} onChange={() => { set('device_type', opt); setCurrentStep(0); }} />
                                     <span className="radio-option__label">{opt}</span>
