@@ -23,7 +23,7 @@ const INITIAL_FORM = {
 function getSteps(deviceType) {
     const steps = [{ key: 'info', label: 'Info' }]
     if (deviceType === 'Window') steps.push({ key: 'windows', label: 'Windows' })
-    if (deviceType === 'Sunmis Device') steps.push({ key: 'sunmi', label: 'Sunmi' })
+    if (deviceType === 'Sunmi Device') steps.push({ key: 'sunmi', label: 'Sunmi' })
     steps.push({ key: 'device', label: 'Device' })
     steps.push({ key: 'feedme', label: 'FeedMe' })
     steps.push({ key: 'photos', label: 'Photos' })
