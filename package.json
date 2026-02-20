@@ -1,0 +1,22 @@
+{
+  "name": "feedme-deployment-checklist",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "pages:dev": "npx wrangler pages dev --d1 DB=feedme-deployment-checklist-db -- npx vite",
+    "pages:deploy": "npm run build && npx wrangler pages deploy dist"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.5.2",
+    "vite": "^7.3.1",
+    "wrangler": "^4.65.0"
+  }
+}
