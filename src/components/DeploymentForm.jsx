@@ -30,7 +30,7 @@ function getSteps(deviceType) {
     return steps
 }
 
-function compressImage(file, maxSize = 1200, quality = 0.7) {
+function compressImage(file, maxSize = 800, quality = 0.5) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader()
         reader.onload = (e) => {
@@ -172,6 +172,9 @@ export default function DeploymentForm({ onSuccess }) {
             })
             const data = await res.json()
             if (data.success) {
+                if (data.warning) {
+                    alert(data.warning)
+                }
                 setSubmitted(true)
                 onSuccess?.()
             } else {

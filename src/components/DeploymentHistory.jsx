@@ -139,10 +139,11 @@ export default function DeploymentHistory({ showToast }) {
 
     const formatDate = (dateStr) => {
         if (!dateStr) return '—'
-        const d = new Date(dateStr)
+        const d = new Date(dateStr + (dateStr.includes('Z') || dateStr.includes('+') ? '' : 'Z'))
         return d.toLocaleDateString('en-MY', {
             year: 'numeric', month: 'short', day: 'numeric',
-            hour: '2-digit', minute: '2-digit'
+            hour: '2-digit', minute: '2-digit',
+            timeZone: 'Asia/Kuala_Lumpur'
         })
     }
 

@@ -76,21 +76,24 @@ export async function onRequestPost(context) {
             );
         }
 
-        // Insert deployment
-        const stmt = env.DB.prepare(`
-      INSERT INTO deployments (
-        merchant_name, device_type,
-        wifi_ssid, static_ip, anydesk_id, printer_ip,
-        windows_firewall_off,
-        sunmi_remote_assistance, device_serial_number,
-        check_socket_server_ip, check_printer_connection,
-        check_payment_method, check_custom_item,
-        check_pax, check_customer_display,
-        check_qr_order, check_close_counter
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+        // Malaysia timezone (UTC+8) computed in JavaScript
+        const now = new Date(Date.now() + 8 * 60 * 60 * 1000);
+        const myt = now.toISOString().replace('T', ' ').slice(0, 19);
 
-        const result = await stmt.bind(
+        // Step 1: Insert deployment record (no photos)
+        const result = await env.DB.prepare(`
+            INSERT INTO deployments (
+                merchant_name, device_type,
+                wifi_ssid, static_ip, anydesk_id, printer_ip,
+                windows_firewall_off,
+                sunmi_remote_assistance, device_serial_number,
+                check_socket_server_ip, check_printer_connection,
+                check_payment_method, check_custom_item,
+                check_pax, check_customer_display,
+                check_qr_order, check_close_counter,
+                created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
             merchant_name, device_type,
             wifi_ssid, static_ip, anydesk_id, printer_ip,
             windows_firewall_off ? 1 : 0,
@@ -103,25 +106,46 @@ export async function onRequestPost(context) {
             check_pax ? 1 : 0,
             check_customer_display ? 1 : 0,
             check_qr_order ? 1 : 0,
-            check_close_counter ? 1 : 0
+            check_close_counter ? 1 : 0,
+            myt
         ).run();
 
         const deploymentId = result.meta.last_row_id;
 
-        // Insert photos
+        // Step 2: Filter and insert photos (each in its own try/catch)
+        const MAX_PHOTO_SIZE = 500000; // 500KB max per photo base64 string
         const allPhotos = [
             ...(device_photos || []).map(p => ({ ...p, category: 'device' })),
             ...(printer_photos || []).map(p => ({ ...p, category: 'printer' })),
         ];
 
+        let photosSaved = 0;
+        let photosSkipped = 0;
+
         for (const photo of allPhotos) {
-            await env.DB.prepare(
-                'INSERT INTO deployment_photos (deployment_id, category, filename, data) VALUES (?, ?, ?, ?)'
-            ).bind(deploymentId, photo.category, photo.filename, photo.data).run();
+            // Skip photos without data or with oversized data
+            if (!photo.data || photo.data.length > MAX_PHOTO_SIZE) {
+                photosSkipped++;
+                continue;
+            }
+            try {
+                await env.DB.prepare(
+                    'INSERT INTO deployment_photos (deployment_id, category, filename, data, created_at) VALUES (?, ?, ?, ?, ?)'
+                ).bind(deploymentId, photo.category, photo.filename, photo.data, myt).run();
+                photosSaved++;
+            } catch (photoErr) {
+                photosSkipped++;
+            }
         }
 
         return new Response(
-            JSON.stringify({ success: true, id: deploymentId }),
+            JSON.stringify({
+                success: true,
+                id: deploymentId,
+                photos_saved: photosSaved,
+                photos_skipped: photosSkipped,
+                warning: photosSkipped > 0 ? `${photosSkipped} photo(s) were too large and skipped. Please clear browser cache and try again.` : undefined
+            }),
             { status: 201, headers: { 'Content-Type': 'application/json' } }
         );
     } catch (error) {
