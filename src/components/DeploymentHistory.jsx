@@ -1,4 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 const CHECKLIST_ITEMS = [
     { key: 'check_socket_server_ip', label: 'Socket Server IP' },
@@ -29,6 +32,10 @@ export default function DeploymentHistory({ showToast }) {
     const [passwordInput, setPasswordInput] = useState('')
     const [passwordError, setPasswordError] = useState('')
     const [pendingAction, setPendingAction] = useState(null)
+    const [deviceFilter, setDeviceFilter] = useState('')
+    const [dateFrom, setDateFrom] = useState('')
+    const [dateTo, setDateTo] = useState('')
+    const [showExportMenu, setShowExportMenu] = useState(false)
 
     const fetchData = useCallback(async () => {
         setLoading(true)
@@ -208,6 +215,106 @@ export default function DeploymentHistory({ showToast }) {
         return 0
     })
 
+    // Get unique device types for filter dropdown
+    const deviceTypes = useMemo(() => {
+        const types = [...new Set(data.map(d => d.device_type).filter(Boolean))]
+        return types.sort()
+    }, [data])
+
+    // Apply filters (device type + date range) on top of sorted data
+    const filteredSortedData = useMemo(() => {
+        return sortedData.filter(row => {
+            // Device filter
+            if (deviceFilter && row.device_type !== deviceFilter) return false
+            // Date range filter
+            if (dateFrom || dateTo) {
+                const rowDate = row.created_at ? row.created_at.slice(0, 10) : ''
+                if (dateFrom && rowDate < dateFrom) return false
+                if (dateTo && rowDate > dateTo) return false
+            }
+            return true
+        })
+    }, [sortedData, deviceFilter, dateFrom, dateTo])
+
+    const hasActiveFilters = deviceFilter || dateFrom || dateTo
+
+    const clearFilters = () => {
+        setDeviceFilter('')
+        setDateFrom('')
+        setDateTo('')
+    }
+
+    // Export functions
+    const exportToExcel = () => {
+        const rows = filteredSortedData.map((row, i) => ({
+            '#': i + 1,
+            'Merchant': row.merchant_name,
+            'Device': row.device_type,
+            'Wi-Fi SSID': row.wifi_ssid,
+            'Static IP': row.static_ip,
+            'Anydesk ID': row.anydesk_id,
+            'Printer IP': row.printer_ip,
+            'Serial Number': row.device_serial_number || '',
+            ...Object.fromEntries(CHECKLIST_ITEMS.map(item => [item.label, row[item.key] ? '✓' : '—'])),
+            'Checklist': `${countChecks(row)}/8`,
+            'Date': formatDate(row.created_at),
+        }))
+        const ws = XLSX.utils.json_to_sheet(rows)
+        // Auto-width columns
+        const colWidths = Object.keys(rows[0] || {}).map(key => ({
+            wch: Math.max(key.length, ...rows.map(r => String(r[key] || '').length)) + 2
+        }))
+        ws['!cols'] = colWidths
+        const wb = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(wb, ws, 'Deployments')
+        XLSX.writeFile(wb, `deployments_${new Date().toISOString().slice(0, 10)}.xlsx`)
+        setShowExportMenu(false)
+    }
+
+    const exportToPDF = () => {
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+        doc.setFontSize(16)
+        doc.text('Deployment Report', 14, 15)
+        doc.setFontSize(9)
+        doc.setTextColor(120)
+        const subtitle = [
+            deviceFilter ? `Device: ${deviceFilter}` : '',
+            dateFrom ? `From: ${dateFrom}` : '',
+            dateTo ? `To: ${dateTo}` : '',
+            search ? `Search: "${search}"` : '',
+        ].filter(Boolean).join('  |  ')
+        if (subtitle) doc.text(subtitle, 14, 21)
+        doc.text(`Generated: ${new Date().toLocaleString('en-MY', { timeZone: 'Asia/Kuala_Lumpur' })}`, 14, subtitle ? 26 : 21)
+
+        const tableData = filteredSortedData.map((row, i) => [
+            i + 1,
+            row.merchant_name,
+            row.device_type,
+            row.wifi_ssid,
+            row.static_ip,
+            row.anydesk_id,
+            (row.printer_ip || '').replace(/\n/g, ', '),
+            `${countChecks(row)}/8`,
+            formatDate(row.created_at),
+        ])
+
+        doc.autoTable({
+            startY: subtitle ? 30 : 25,
+            head: [['#', 'Merchant', 'Device', 'Wi-Fi', 'Static IP', 'Anydesk', 'Printer IP', 'Checklist', 'Date']],
+            body: tableData,
+            styles: { fontSize: 8, cellPadding: 2 },
+            headStyles: { fillColor: [249, 115, 22], fontSize: 8, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
+            columnStyles: {
+                0: { cellWidth: 8 },
+                7: { cellWidth: 16, halign: 'center' },
+            },
+        })
+
+        doc.save(`deployments_${new Date().toISOString().slice(0, 10)}.pdf`)
+        setShowExportMenu(false)
+    }
+
     const CheckMark = ({ value }) => (
         value ? <span className="check-icon">✓</span> : <span className="cross-icon">—</span>
     )
@@ -266,11 +373,61 @@ export default function DeploymentHistory({ showToast }) {
 
     return (
         <div>
-            {/* Search Bar */}
+            {/* Search & Filter Bar */}
             <div className="search-bar">
-                <input className="input" type="text" placeholder="🔍 Search by merchant name or device type..."
-                    value={search} onChange={e => setSearch(e.target.value)} />
-                <button className="btn btn--secondary" onClick={fetchData}>🔄 Refresh</button>
+                <input className="input" type="text" placeholder="🔍 Search by merchant name..."
+                    value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 2 }} />
+                <select className="input" value={deviceFilter} onChange={e => setDeviceFilter(e.target.value)}
+                    style={{ flex: 0, minWidth: 150, cursor: 'pointer', fontSize: 13, padding: '8px 10px' }}>
+                    <option value="">All Devices</option>
+                    {deviceTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <button className="btn btn--secondary" onClick={fetchData}>🔄</button>
+            </div>
+
+            {/* Date Filter & Export Row */}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                    <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>📅 From</span>
+                    <input type="date" className="input" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+                        style={{ fontSize: 13, padding: '6px 10px', width: 150 }} />
+                    <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>To</span>
+                    <input type="date" className="input" value={dateTo} onChange={e => setDateTo(e.target.value)}
+                        style={{ fontSize: 13, padding: '6px 10px', width: 150 }} />
+                </div>
+                {hasActiveFilters && (
+                    <button className="btn btn--secondary btn--sm" onClick={clearFilters}
+                        style={{ fontSize: 12 }}>✕ Clear Filters</button>
+                )}
+                <div style={{ marginLeft: 'auto', position: 'relative' }}>
+                    <button className="btn btn--primary btn--sm" onClick={() => setShowExportMenu(prev => !prev)}
+                        style={{ fontSize: 13 }}>📥 Export ({filteredSortedData.length})</button>
+                    {showExportMenu && (
+                        <div style={{
+                            position: 'absolute', right: 0, top: '100%', marginTop: 4,
+                            background: 'var(--bg-card)', border: '1px solid var(--border-color)',
+                            borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                            zIndex: 20, overflow: 'hidden', minWidth: 160
+                        }}>
+                            <button onClick={exportToExcel} style={{
+                                display: 'block', width: '100%', padding: '10px 16px', border: 'none',
+                                background: 'transparent', color: 'var(--text-primary)', fontSize: 13,
+                                cursor: 'pointer', textAlign: 'left'
+                            }}
+                                onMouseEnter={e => e.target.style.background = 'var(--bg-hover)'}
+                                onMouseLeave={e => e.target.style.background = 'transparent'}
+                            >📊 Export as Excel (.xlsx)</button>
+                            <button onClick={exportToPDF} style={{
+                                display: 'block', width: '100%', padding: '10px 16px', border: 'none',
+                                background: 'transparent', color: 'var(--text-primary)', fontSize: 13,
+                                cursor: 'pointer', textAlign: 'left'
+                            }}
+                                onMouseEnter={e => e.target.style.background = 'var(--bg-hover)'}
+                                onMouseLeave={e => e.target.style.background = 'transparent'}
+                            >📄 Export as PDF (.pdf)</button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {loading ? (
@@ -278,13 +435,16 @@ export default function DeploymentHistory({ showToast }) {
                     <div className="spinner" style={{ width: 32, height: 32, borderWidth: 3, borderColor: 'var(--border-color)', borderTopColor: 'var(--accent-primary)' }} />
                     <p style={{ marginTop: 16, color: 'var(--text-muted)' }}>Loading deployments...</p>
                 </div>
-            ) : data.length === 0 ? (
+            ) : filteredSortedData.length === 0 ? (
                 <div className="empty-state">
                     <div className="empty-state__icon">📭</div>
                     <h3 className="empty-state__title">No deployments found</h3>
                     <p className="empty-state__text">
-                        {search ? 'No results match your search.' : 'Submit your first deployment to get started.'}
+                        {(search || hasActiveFilters) ? 'No results match your filters.' : 'Submit your first deployment to get started.'}
                     </p>
+                    {hasActiveFilters && (
+                        <button className="btn btn--secondary" onClick={clearFilters} style={{ marginTop: 12 }}>Clear Filters</button>
+                    )}
                 </div>
             ) : (
                 <div className="table-wrapper">
@@ -301,7 +461,7 @@ export default function DeploymentHistory({ showToast }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {sortedData.map((row, i) => (
+                            {filteredSortedData.map((row, i) => (
                                 <tr key={row.id}>
                                     <td>{i + 1}</td>
                                     <td><strong>{row.merchant_name}</strong></td>
