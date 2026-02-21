@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
+import DateRangePicker from './DateRangePicker'
 
 const CHECKLIST_ITEMS = [
     { key: 'check_socket_server_ip', label: 'Socket Server IP' },
@@ -459,22 +460,11 @@ export default function DeploymentHistory({ showToast }) {
                                 <th></th>
                                 <th></th><th></th>
                                 <th style={{ padding: '4px 4px' }}>
-                                    <div style={{ display: 'flex', gap: 3, flexDirection: 'column' }}>
-                                        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-                                            title="From date"
-                                            style={{
-                                                fontSize: 10, padding: '3px 4px', borderRadius: 'var(--radius-sm)',
-                                                border: '1px solid var(--border-color)', background: 'var(--bg-primary)',
-                                                color: 'var(--text-primary)', width: '100%'
-                                            }} />
-                                        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-                                            title="To date"
-                                            style={{
-                                                fontSize: 10, padding: '3px 4px', borderRadius: 'var(--radius-sm)',
-                                                border: '1px solid var(--border-color)', background: 'var(--bg-primary)',
-                                                color: 'var(--text-primary)', width: '100%'
-                                            }} />
-                                    </div>
+                                    <DateRangePicker
+                                        dateFrom={dateFrom}
+                                        dateTo={dateTo}
+                                        onChange={(f, t) => { setDateFrom(f); setDateTo(t) }}
+                                    />
                                 </th>
                                 <th></th>
                             </tr>
