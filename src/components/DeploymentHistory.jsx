@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
@@ -39,6 +39,24 @@ export default function DeploymentHistory({ showToast }) {
     const [showExportMenu, setShowExportMenu] = useState(false)
     const [showDeviceMenu, setShowDeviceMenu] = useState(false)
     const [deviceMenuPos, setDeviceMenuPos] = useState({ top: 0, left: 0 })
+    const [expandedRow, setExpandedRow] = useState(null)
+    const [currentPage, setCurrentPage] = useState(1)
+    const ITEMS_PER_PAGE = 10
+    const deviceMenuRef = useRef(null)
+    const deviceArrowRef = useRef(null)
+
+    // Close device menu on outside click
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (showDeviceMenu &&
+                deviceMenuRef.current && !deviceMenuRef.current.contains(e.target) &&
+                deviceArrowRef.current && !deviceArrowRef.current.contains(e.target)) {
+                setShowDeviceMenu(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [showDeviceMenu])
 
     const fetchData = useCallback(async () => {
         setLoading(true)
@@ -241,6 +259,13 @@ export default function DeploymentHistory({ showToast }) {
 
     const hasActiveFilters = deviceFilter || dateFrom || dateTo
 
+    // Pagination
+    const totalPages = Math.max(1, Math.ceil(filteredSortedData.length / ITEMS_PER_PAGE))
+    const paginatedData = filteredSortedData.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+
+    // Reset to page 1 when filters change
+    useEffect(() => { setCurrentPage(1) }, [deviceFilter, dateFrom, dateTo, search])
+
     const clearFilters = () => {
         setDeviceFilter('')
         setDateFrom('')
@@ -442,7 +467,7 @@ export default function DeploymentHistory({ showToast }) {
                                 <th style={{ position: 'relative', userSelect: 'none' }}>
                                     <span onClick={() => handleSort('device_type')} style={{ cursor: 'pointer' }}>Device</span>
                                     <span
-                                        ref={el => { if (el) el._deviceArrow = true; }}
+                                        ref={deviceArrowRef}
                                         onClick={e => {
                                             e.stopPropagation();
                                             const rect = e.currentTarget.getBoundingClientRect();
@@ -458,7 +483,7 @@ export default function DeploymentHistory({ showToast }) {
                                         title="Filter by device"
                                     >▼</span>
                                     {showDeviceMenu && (
-                                        <div style={{
+                                        <div ref={deviceMenuRef} style={{
                                             position: 'fixed', top: deviceMenuPos.top, left: deviceMenuPos.left,
                                             background: 'var(--bg-card)', border: '1px solid var(--border-color)',
                                             borderRadius: 'var(--radius-md)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
@@ -516,33 +541,81 @@ export default function DeploymentHistory({ showToast }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredSortedData.map((row, i) => (
-                                <tr key={row.id}>
-                                    <td>{i + 1}</td>
-                                    <td><strong>{row.merchant_name}</strong></td>
-                                    <td><DeviceBadge type={row.device_type} /></td>
-                                    <td>
-                                        <div style={{ fontSize: 12 }}>
-                                            <div>📡 {row.wifi_ssid}</div>
-                                            <div style={{ color: 'var(--text-muted)' }}>🌐 {row.static_ip}</div>
-                                        </div>
-                                    </td>
-                                    <td style={{ fontSize: 12 }}>{row.anydesk_id}</td>
-                                    <td>
-                                        <span style={{ color: countChecks(row) === 8 ? 'var(--success)' : 'var(--warning)', fontWeight: 600, fontSize: 13 }}>
-                                            {countChecks(row)}/8
-                                        </span>
-                                    </td>
-                                    <td style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{formatDate(row.created_at)}</td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: 6 }}>
-                                            <button className="btn btn--secondary btn--sm" onClick={() => openDetail(row)} title="View">👁️</button>
-                                            <button className="btn btn--secondary btn--sm" onClick={() => requestPassword(() => { openDetail(row); setTimeout(() => startEdit(row), 300); })} title="Edit" style={{ background: 'rgba(249,115,22,0.08)', borderColor: 'rgba(249,115,22,0.2)' }}>✏️</button>
-                                            <button className="btn btn--danger btn--sm" onClick={() => requestPassword(() => handleDelete(row.id))} title="Delete">🗑️</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {paginatedData.map((row, i) => {
+                                const globalIndex = (currentPage - 1) * ITEMS_PER_PAGE + i + 1
+                                const isExpanded = expandedRow === row.id
+                                return (
+                                    <>
+                                        <tr key={row.id} style={{ cursor: 'pointer' }} onClick={() => setExpandedRow(isExpanded ? null : row.id)}>
+                                            <td>{globalIndex}</td>
+                                            <td><strong>{row.merchant_name}</strong></td>
+                                            <td><DeviceBadge type={row.device_type} /></td>
+                                            <td>
+                                                <div style={{ fontSize: 12 }}>
+                                                    <div>📡 {row.wifi_ssid}</div>
+                                                    <div style={{ color: 'var(--text-muted)' }}>🌐 {row.static_ip}</div>
+                                                </div>
+                                            </td>
+                                            <td style={{ fontSize: 12 }}>{row.anydesk_id}</td>
+                                            <td>
+                                                <span style={{ color: countChecks(row) === 8 ? 'var(--success)' : 'var(--warning)', fontWeight: 600, fontSize: 13 }}>
+                                                    {countChecks(row)}/8
+                                                </span>
+                                            </td>
+                                            <td style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{formatDate(row.created_at)}</td>
+                                            <td>
+                                                <div style={{ display: 'flex', gap: 6 }}>
+                                                    <button className="btn btn--secondary btn--sm" onClick={e => { e.stopPropagation(); setExpandedRow(isExpanded ? null : row.id) }} title={isExpanded ? 'Collapse' : 'View'}>
+                                                        {isExpanded ? '🔽' : '👁️'}
+                                                    </button>
+                                                    <button className="btn btn--danger btn--sm" onClick={e => { e.stopPropagation(); requestPassword(() => handleDelete(row.id)) }} title="Delete">🗑️</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {isExpanded && (
+                                            <tr key={row.id + '-detail'} style={{ background: 'var(--bg-hover)' }}>
+                                                <td colSpan={9} style={{ padding: 0 }}>
+                                                    <div style={{ padding: '14px 20px', fontSize: 12, lineHeight: 1.6 }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                                            <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>📋 {row.merchant_name}</strong>
+                                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                                <button className="btn btn--secondary btn--sm"
+                                                                    onClick={e => { e.stopPropagation(); requestPassword(() => { openDetail(row); setTimeout(() => startEdit(row), 300); }) }}
+                                                                    title="Edit"
+                                                                    style={{ background: 'rgba(249,115,22,0.08)', borderColor: 'rgba(249,115,22,0.2)' }}
+                                                                >✏️ Edit</button>
+                                                                <button className="btn btn--secondary btn--sm"
+                                                                    onClick={e => { e.stopPropagation(); openDetail(row) }}
+                                                                    title="Full details"
+                                                                >📄 Full Details</button>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px 24px' }}>
+                                                            <div><span style={{ color: 'var(--text-muted)' }}>Device:</span> {row.device_type}</div>
+                                                            <div><span style={{ color: 'var(--text-muted)' }}>Wi-Fi:</span> {row.wifi_ssid}</div>
+                                                            <div><span style={{ color: 'var(--text-muted)' }}>Static IP:</span> {row.static_ip}</div>
+                                                            <div><span style={{ color: 'var(--text-muted)' }}>Anydesk:</span> {row.anydesk_id}</div>
+                                                            <div><span style={{ color: 'var(--text-muted)' }}>Printer IP:</span> {row.printer_ip || '—'}</div>
+                                                            <div><span style={{ color: 'var(--text-muted)' }}>Serial No:</span> {row.device_serial_number || '—'}</div>
+                                                            <div><span style={{ color: 'var(--text-muted)' }}>Date:</span> {formatDate(row.created_at)}</div>
+                                                        </div>
+                                                        <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                            {CHECKLIST_ITEMS.map(item => (
+                                                                <span key={item.key} style={{
+                                                                    padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 11,
+                                                                    background: row[item.key] ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.08)',
+                                                                    color: row[item.key] ? 'var(--success)' : 'var(--text-muted)',
+                                                                    fontWeight: row[item.key] ? 600 : 400,
+                                                                }}>{row[item.key] ? '✓' : '✗'} {item.label}</span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </>
+                                )
+                            })}
                         </tbody>
                     </table>
                     <div style={{
@@ -551,9 +624,34 @@ export default function DeploymentHistory({ showToast }) {
                         fontSize: 12, color: 'var(--text-muted)',
                     }}>
                         <span>
-                            Showing {filteredSortedData.length} of {data.length} results
+                            Showing {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, filteredSortedData.length)}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredSortedData.length)} of {filteredSortedData.length} results
                             {hasActiveFilters ? ' (filtered)' : ''}
                         </span>
+                        {totalPages > 1 && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    style={{
+                                        padding: '4px 10px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)',
+                                        background: currentPage === 1 ? 'transparent' : 'var(--bg-card)',
+                                        color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontSize: 12,
+                                    }}
+                                >‹ Prev</button>
+                                <span style={{ padding: '0 8px', fontSize: 12 }}>Page {currentPage} of {totalPages}</span>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    style={{
+                                        padding: '4px 10px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)',
+                                        background: currentPage === totalPages ? 'transparent' : 'var(--bg-card)',
+                                        color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-primary)',
+                                        cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: 12,
+                                    }}
+                                >Next ›</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
