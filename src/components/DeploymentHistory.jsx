@@ -373,33 +373,15 @@ export default function DeploymentHistory({ showToast }) {
 
     return (
         <div>
-            {/* Search & Filter Bar */}
+            {/* Search & Export Bar */}
             <div className="search-bar">
                 <input className="input" type="text" placeholder="🔍 Search by merchant name..."
                     value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 2 }} />
-                <select className="input" value={deviceFilter} onChange={e => setDeviceFilter(e.target.value)}
-                    style={{ flex: 0, minWidth: 150, cursor: 'pointer', fontSize: 13, padding: '8px 10px' }}>
-                    <option value="">All Devices</option>
-                    {deviceTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-                <button className="btn btn--secondary" onClick={fetchData}>🔄</button>
-            </div>
-
-            {/* Date Filter & Export Row */}
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                    <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>📅 From</span>
-                    <input type="date" className="input" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-                        style={{ fontSize: 13, padding: '6px 10px', width: 150 }} />
-                    <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>To</span>
-                    <input type="date" className="input" value={dateTo} onChange={e => setDateTo(e.target.value)}
-                        style={{ fontSize: 13, padding: '6px 10px', width: 150 }} />
-                </div>
                 {hasActiveFilters && (
                     <button className="btn btn--secondary btn--sm" onClick={clearFilters}
                         style={{ fontSize: 12 }}>✕ Clear Filters</button>
                 )}
-                <div style={{ marginLeft: 'auto', position: 'relative' }}>
+                <div style={{ position: 'relative' }}>
                     <button className="btn btn--primary btn--sm" onClick={() => setShowExportMenu(prev => !prev)}
                         style={{ fontSize: 13 }}>📥 Export ({filteredSortedData.length})</button>
                     {showExportMenu && (
@@ -428,6 +410,7 @@ export default function DeploymentHistory({ showToast }) {
                         </div>
                     )}
                 </div>
+                <button className="btn btn--secondary" onClick={fetchData}>🔄</button>
             </div>
 
             {loading ? (
@@ -458,6 +441,42 @@ export default function DeploymentHistory({ showToast }) {
                                 <th>Anydesk</th><th>Checklist</th>
                                 <th onClick={() => handleSort('created_at')} style={{ cursor: 'pointer', userSelect: 'none' }}>Date<SortIcon field="created_at" /></th>
                                 <th>Actions</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th style={{ padding: '4px 6px' }}>
+                                    <select value={deviceFilter} onChange={e => setDeviceFilter(e.target.value)}
+                                        style={{
+                                            width: '100%', fontSize: 11, padding: '4px 6px', borderRadius: 'var(--radius-sm)',
+                                            border: '1px solid var(--border-color)', background: 'var(--bg-primary)',
+                                            color: 'var(--text-primary)', cursor: 'pointer'
+                                        }}>
+                                        <option value="">All</option>
+                                        {deviceTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                </th>
+                                <th></th>
+                                <th></th><th></th>
+                                <th style={{ padding: '4px 4px' }}>
+                                    <div style={{ display: 'flex', gap: 3, flexDirection: 'column' }}>
+                                        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+                                            title="From date"
+                                            style={{
+                                                fontSize: 10, padding: '3px 4px', borderRadius: 'var(--radius-sm)',
+                                                border: '1px solid var(--border-color)', background: 'var(--bg-primary)',
+                                                color: 'var(--text-primary)', width: '100%'
+                                            }} />
+                                        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+                                            title="To date"
+                                            style={{
+                                                fontSize: 10, padding: '3px 4px', borderRadius: 'var(--radius-sm)',
+                                                border: '1px solid var(--border-color)', background: 'var(--bg-primary)',
+                                                color: 'var(--text-primary)', width: '100%'
+                                            }} />
+                                    </div>
+                                </th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
