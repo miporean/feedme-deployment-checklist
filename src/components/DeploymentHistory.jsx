@@ -37,6 +37,7 @@ export default function DeploymentHistory({ showToast }) {
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
     const [showExportMenu, setShowExportMenu] = useState(false)
+    const [showDeviceMenu, setShowDeviceMenu] = useState(false)
 
     const fetchData = useCallback(async () => {
         setLoading(true)
@@ -437,36 +438,64 @@ export default function DeploymentHistory({ showToast }) {
                             <tr>
                                 <th>#</th>
                                 <th onClick={() => handleSort('merchant_name')} style={{ cursor: 'pointer', userSelect: 'none' }}>Merchant<SortIcon field="merchant_name" /></th>
-                                <th onClick={() => handleSort('device_type')} style={{ cursor: 'pointer', userSelect: 'none' }}>Device<SortIcon field="device_type" /></th>
+                                <th style={{ position: 'relative', userSelect: 'none' }}>
+                                    <span onClick={() => handleSort('device_type')} style={{ cursor: 'pointer' }}>Device<SortIcon field="device_type" /></span>
+                                    <span onClick={e => { e.stopPropagation(); setShowDeviceMenu(prev => !prev) }}
+                                        style={{
+                                            cursor: 'pointer', marginLeft: 4, fontSize: 10,
+                                            color: deviceFilter ? 'var(--accent-primary)' : 'var(--text-muted)',
+                                            padding: '2px 4px', borderRadius: 'var(--radius-sm)',
+                                            background: deviceFilter ? 'rgba(249,115,22,0.12)' : 'transparent',
+                                        }}
+                                        title="Filter by device"
+                                    >▼</span>
+                                    {showDeviceMenu && (
+                                        <div style={{
+                                            position: 'absolute', left: 0, top: '100%', marginTop: 4,
+                                            background: 'var(--bg-card)', border: '1px solid var(--border-color)',
+                                            borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                                            zIndex: 30, overflow: 'hidden', minWidth: 140,
+                                        }}>
+                                            <button onClick={() => { setDeviceFilter(''); setShowDeviceMenu(false) }}
+                                                style={{
+                                                    display: 'block', width: '100%', padding: '8px 14px', border: 'none',
+                                                    background: !deviceFilter ? 'rgba(249,115,22,0.1)' : 'transparent',
+                                                    color: !deviceFilter ? 'var(--accent-primary)' : 'var(--text-primary)',
+                                                    fontWeight: !deviceFilter ? 600 : 400,
+                                                    fontSize: 12, cursor: 'pointer', textAlign: 'left',
+                                                }}
+                                                onMouseEnter={e => { if (deviceFilter) e.target.style.background = 'var(--bg-hover)' }}
+                                                onMouseLeave={e => { if (deviceFilter) e.target.style.background = 'transparent' }}
+                                            >All Devices</button>
+                                            {deviceTypes.map(t => (
+                                                <button key={t} onClick={() => { setDeviceFilter(t); setShowDeviceMenu(false) }}
+                                                    style={{
+                                                        display: 'block', width: '100%', padding: '8px 14px', border: 'none',
+                                                        background: deviceFilter === t ? 'rgba(249,115,22,0.1)' : 'transparent',
+                                                        color: deviceFilter === t ? 'var(--accent-primary)' : 'var(--text-primary)',
+                                                        fontWeight: deviceFilter === t ? 600 : 400,
+                                                        fontSize: 12, cursor: 'pointer', textAlign: 'left',
+                                                    }}
+                                                    onMouseEnter={e => { if (deviceFilter !== t) e.target.style.background = 'var(--bg-hover)' }}
+                                                    onMouseLeave={e => { if (deviceFilter !== t) e.target.style.background = 'transparent' }}
+                                                >{t}</button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </th>
                                 <th>Wi-Fi / IP</th>
                                 <th>Anydesk</th><th>Checklist</th>
-                                <th onClick={() => handleSort('created_at')} style={{ cursor: 'pointer', userSelect: 'none' }}>Date<SortIcon field="created_at" /></th>
+                                <th style={{ userSelect: 'none' }}>
+                                    <span onClick={() => handleSort('created_at')} style={{ cursor: 'pointer' }}>Date<SortIcon field="created_at" /></span>
+                                    <div style={{ marginTop: 2 }}>
+                                        <DateRangePicker
+                                            dateFrom={dateFrom}
+                                            dateTo={dateTo}
+                                            onChange={(f, t) => { setDateFrom(f); setDateTo(t) }}
+                                        />
+                                    </div>
+                                </th>
                                 <th>Actions</th>
-                            </tr>
-                            <tr>
-                                <th></th>
-                                <th></th>
-                                <th style={{ padding: '4px 6px' }}>
-                                    <select value={deviceFilter} onChange={e => setDeviceFilter(e.target.value)}
-                                        style={{
-                                            width: '100%', fontSize: 11, padding: '4px 6px', borderRadius: 'var(--radius-sm)',
-                                            border: '1px solid var(--border-color)', background: 'var(--bg-primary)',
-                                            color: 'var(--text-primary)', cursor: 'pointer'
-                                        }}>
-                                        <option value="">All</option>
-                                        {deviceTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                                    </select>
-                                </th>
-                                <th></th>
-                                <th></th><th></th>
-                                <th style={{ padding: '4px 4px' }}>
-                                    <DateRangePicker
-                                        dateFrom={dateFrom}
-                                        dateTo={dateTo}
-                                        onChange={(f, t) => { setDateFrom(f); setDateTo(t) }}
-                                    />
-                                </th>
-                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
