@@ -119,7 +119,7 @@ const navBtn = {
     fontSize: 18, cursor: 'pointer', padding: '2px 8px', borderRadius: 'var(--radius-sm)',
 }
 
-export default function DateRangePicker({ dateFrom, dateTo, onChange }) {
+export default function DateRangePicker({ dateFrom, dateTo, onChange, renderTrigger }) {
     const [open, setOpen] = useState(false)
     const [tempFrom, setTempFrom] = useState(dateFrom)
     const [tempTo, setTempTo] = useState(dateTo)
@@ -223,17 +223,19 @@ export default function DateRangePicker({ dateFrom, dateTo, onChange }) {
 
     return (
         <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-            <button onClick={handleOpen} style={{
-                background: dateFrom ? 'rgba(249,115,22,0.12)' : 'transparent',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-sm)',
-                color: dateFrom ? 'var(--accent-primary)' : 'var(--text-muted)',
-                fontSize: 11, padding: '4px 8px', cursor: 'pointer',
-                whiteSpace: 'nowrap', fontWeight: dateFrom ? 600 : 400,
-                display: 'flex', alignItems: 'center', gap: 4,
-            }}>
-                📅 {label}
-            </button>
+            {renderTrigger ? renderTrigger(handleOpen) : (
+                <button onClick={handleOpen} style={{
+                    background: dateFrom ? 'rgba(249,115,22,0.12)' : 'transparent',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: dateFrom ? 'var(--accent-primary)' : 'var(--text-muted)',
+                    fontSize: 11, padding: '4px 8px', cursor: 'pointer',
+                    whiteSpace: 'nowrap', fontWeight: dateFrom ? 600 : 400,
+                    display: 'flex', alignItems: 'center', gap: 4,
+                }}>
+                    📅 {label}
+                </button>
+            )}
 
             {open && (
                 <div style={{

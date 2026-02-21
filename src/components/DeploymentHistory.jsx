@@ -439,7 +439,7 @@ export default function DeploymentHistory({ showToast }) {
                                 <th>#</th>
                                 <th onClick={() => handleSort('merchant_name')} style={{ cursor: 'pointer', userSelect: 'none' }}>Merchant<SortIcon field="merchant_name" /></th>
                                 <th style={{ position: 'relative', userSelect: 'none' }}>
-                                    <span onClick={() => handleSort('device_type')} style={{ cursor: 'pointer' }}>Device<SortIcon field="device_type" /></span>
+                                    <span onClick={() => handleSort('device_type')} style={{ cursor: 'pointer' }}>Device</span>
                                     <span onClick={e => { e.stopPropagation(); setShowDeviceMenu(prev => !prev) }}
                                         style={{
                                             cursor: 'pointer', marginLeft: 4, fontSize: 10,
@@ -485,15 +485,24 @@ export default function DeploymentHistory({ showToast }) {
                                 </th>
                                 <th>Wi-Fi / IP</th>
                                 <th>Anydesk</th><th>Checklist</th>
-                                <th style={{ userSelect: 'none' }}>
-                                    <span onClick={() => handleSort('created_at')} style={{ cursor: 'pointer' }}>Date<SortIcon field="created_at" /></span>
-                                    <div style={{ marginTop: 2 }}>
-                                        <DateRangePicker
-                                            dateFrom={dateFrom}
-                                            dateTo={dateTo}
-                                            onChange={(f, t) => { setDateFrom(f); setDateTo(t) }}
-                                        />
-                                    </div>
+                                <th style={{ position: 'relative', userSelect: 'none' }}>
+                                    <span onClick={() => handleSort('created_at')} style={{ cursor: 'pointer' }}>Date</span>
+                                    <DateRangePicker
+                                        dateFrom={dateFrom}
+                                        dateTo={dateTo}
+                                        onChange={(f, t) => { setDateFrom(f); setDateTo(t) }}
+                                        renderTrigger={(onOpen) => (
+                                            <span onClick={e => { e.stopPropagation(); onOpen() }}
+                                                style={{
+                                                    cursor: 'pointer', marginLeft: 4, fontSize: 10,
+                                                    color: dateFrom ? 'var(--accent-primary)' : 'var(--text-muted)',
+                                                    padding: '2px 4px', borderRadius: 'var(--radius-sm)',
+                                                    background: dateFrom ? 'rgba(249,115,22,0.12)' : 'transparent',
+                                                }}
+                                                title="Filter by date"
+                                            >▼</span>
+                                        )}
+                                    />
                                 </th>
                                 <th>Actions</th>
                             </tr>
