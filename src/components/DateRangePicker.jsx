@@ -127,6 +127,8 @@ export default function DateRangePicker({ dateFrom, dateTo, onChange, renderTrig
     const [hoverDate, setHoverDate] = useState('')
     const [activePreset, setActivePreset] = useState('')
     const ref = useRef(null)
+    const triggerRef = useRef(null)
+    const [popupPos, setPopupPos] = useState({ top: 0, right: 0 })
 
     // Two calendar months
     const now = new Date()
@@ -150,6 +152,14 @@ export default function DateRangePicker({ dateFrom, dateTo, onChange, renderTrig
         setTempTo(dateTo)
         setSelecting(false)
         setActivePreset('')
+        // Calculate fixed position from trigger
+        if (triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect()
+            setPopupPos({
+                top: rect.bottom + 6,
+                right: window.innerWidth - rect.right,
+            })
+        }
         // Set calendar to show the from date month or current month
         if (dateFrom) {
             const d = parseDateLocal(dateFrom)
@@ -222,7 +232,7 @@ export default function DateRangePicker({ dateFrom, dateTo, onChange, renderTrig
         : 'All Dates'
 
     return (
-        <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+        <span ref={triggerRef} style={{ display: 'inline-block' }}>
             {renderTrigger ? renderTrigger(handleOpen) : (
                 <button onClick={handleOpen} style={{
                     background: dateFrom ? 'rgba(249,115,22,0.12)' : 'transparent',
@@ -238,11 +248,11 @@ export default function DateRangePicker({ dateFrom, dateTo, onChange, renderTrig
             )}
 
             {open && (
-                <div style={{
-                    position: 'absolute', right: 0, top: '100%', marginTop: 6,
+                <div ref={ref} style={{
+                    position: 'fixed', top: popupPos.top, right: popupPos.right,
                     background: 'var(--bg-card)', border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)',
-                    zIndex: 100, display: 'flex', overflow: 'hidden',
+                    borderRadius: 'var(--radius-lg)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                    zIndex: 1000, display: 'flex', overflow: 'hidden',
                 }}>
                     {/* Presets sidebar */}
                     <div style={{
@@ -330,7 +340,7 @@ export default function DateRangePicker({ dateFrom, dateTo, onChange, renderTrig
                     </div>
                 </div>
             )}
-        </div>
+        </span>
     )
 }
 

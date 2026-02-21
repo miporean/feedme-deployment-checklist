@@ -38,6 +38,7 @@ export default function DeploymentHistory({ showToast }) {
     const [dateTo, setDateTo] = useState('')
     const [showExportMenu, setShowExportMenu] = useState(false)
     const [showDeviceMenu, setShowDeviceMenu] = useState(false)
+    const [deviceMenuPos, setDeviceMenuPos] = useState({ top: 0, left: 0 })
 
     const fetchData = useCallback(async () => {
         setLoading(true)
@@ -440,7 +441,14 @@ export default function DeploymentHistory({ showToast }) {
                                 <th onClick={() => handleSort('merchant_name')} style={{ cursor: 'pointer', userSelect: 'none' }}>Merchant<SortIcon field="merchant_name" /></th>
                                 <th style={{ position: 'relative', userSelect: 'none' }}>
                                     <span onClick={() => handleSort('device_type')} style={{ cursor: 'pointer' }}>Device</span>
-                                    <span onClick={e => { e.stopPropagation(); setShowDeviceMenu(prev => !prev) }}
+                                    <span
+                                        ref={el => { if (el) el._deviceArrow = true; }}
+                                        onClick={e => {
+                                            e.stopPropagation();
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            setDeviceMenuPos({ top: rect.bottom + 4, left: rect.left });
+                                            setShowDeviceMenu(prev => !prev);
+                                        }}
                                         style={{
                                             cursor: 'pointer', marginLeft: 4, fontSize: 10,
                                             color: deviceFilter ? 'var(--accent-primary)' : 'var(--text-muted)',
@@ -451,10 +459,10 @@ export default function DeploymentHistory({ showToast }) {
                                     >▼</span>
                                     {showDeviceMenu && (
                                         <div style={{
-                                            position: 'absolute', left: 0, top: '100%', marginTop: 4,
+                                            position: 'fixed', top: deviceMenuPos.top, left: deviceMenuPos.left,
                                             background: 'var(--bg-card)', border: '1px solid var(--border-color)',
-                                            borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
-                                            zIndex: 30, overflow: 'hidden', minWidth: 140,
+                                            borderRadius: 'var(--radius-md)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                                            zIndex: 1000, overflow: 'hidden', minWidth: 140,
                                         }}>
                                             <button onClick={() => { setDeviceFilter(''); setShowDeviceMenu(false) }}
                                                 style={{
@@ -537,6 +545,16 @@ export default function DeploymentHistory({ showToast }) {
                             ))}
                         </tbody>
                     </table>
+                    <div style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '10px 16px', borderTop: '1px solid var(--border-color)',
+                        fontSize: 12, color: 'var(--text-muted)',
+                    }}>
+                        <span>
+                            Showing {filteredSortedData.length} of {data.length} results
+                            {hasActiveFilters ? ' (filtered)' : ''}
+                        </span>
+                    </div>
                 </div>
             )}
 
