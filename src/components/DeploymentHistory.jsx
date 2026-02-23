@@ -611,7 +611,7 @@ export default function DeploymentHistory({ showToast }) {
                                             const rowDevicePhotos = rowPhotos.filter(p => p.category === 'device')
                                             const rowPrinterPhotos = rowPhotos.filter(p => p.category === 'printer')
                                             return (
-                                                <tr key={row.id + '-detail'} style={{ background: 'var(--bg-hover)' }}>
+                                                <tr key={row.id + '-detail'} className="expanded-detail" style={{ background: 'var(--bg-hover)' }}>
                                                     <td colSpan={9} style={{ padding: 0 }}>
                                                         <div style={{ padding: '14px 20px', fontSize: 12, lineHeight: 1.6 }}>
                                                             {/* Header with Edit/Save buttons */}

@@ -1317,49 +1317,70 @@ textarea.input {
     background: transparent;
   }
 
+  /* Expanded detail row — full width, no card padding conflict */
+  .table tr.expanded-detail {
+    display: block;
+    padding: 0;
+    border-top: none;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    margin-top: -14px;
+  }
+
+  .table tr.expanded-detail td {
+    display: block;
+    width: 100%;
+    padding: 0;
+  }
+
   .table td {
     border: none;
     padding: 2px 0;
     font-size: 13px;
   }
 
+  /* hide # column */
   .table td:nth-child(1) {
     display: none;
   }
 
-  /* hide # */
+  /* Merchant name — leave room for action buttons */
   .table td:nth-child(2) {
-    width: 100%;
+    width: calc(100% - 90px);
     font-size: 15px;
     order: 1;
   }
 
+  /* Device badge */
   .table td:nth-child(3) {
     order: 2;
   }
 
+  /* Wi-Fi / IP */
   .table td:nth-child(4) {
     width: 100%;
     order: 4;
   }
 
+  /* Anydesk */
   .table td:nth-child(5) {
     order: 5;
-    margin-right: auto;
+    width: 100%;
   }
 
+  /* Checklist score */
   .table td:nth-child(6) {
     order: 3;
     margin-left: auto;
   }
 
+  /* Date */
   .table td:nth-child(7) {
     width: 100%;
     order: 6;
   }
 
+  /* Actions — top right corner */
   .table td:nth-child(8) {
-    /* actions */
     order: 0;
     position: absolute;
     top: 12px;
