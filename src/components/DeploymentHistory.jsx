@@ -206,6 +206,7 @@ export default function DeploymentHistory({ showToast }) {
                 showToast('Record updated successfully')
                 setEditing(false)
                 setEditForm(null)
+                setShowConfirm(false)
                 fetchData()
             } else {
                 showToast('Failed to update: ' + (json.error || 'Unknown error'), 'error')
