@@ -620,7 +620,7 @@ export default function DeploymentHistory({ showToast }) {
                                                                     {isEditingThis ? (
                                                                         <>
                                                                             <button className="btn btn--primary btn--sm"
-                                                                                onClick={e => { e.stopPropagation(); confirmSave() }}
+                                                                                onClick={e => { e.stopPropagation(); handleSaveClick() }}
                                                                                 disabled={saving}
                                                                             >{saving ? 'Saving...' : '💾 Save'}</button>
                                                                             <button className="btn btn--secondary btn--sm"
