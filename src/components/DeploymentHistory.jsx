@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 import DateRangePicker from './DateRangePicker'
 
 const CHECKLIST_ITEMS = [
@@ -40,6 +40,8 @@ export default function DeploymentHistory({ showToast }) {
     const [showDeviceMenu, setShowDeviceMenu] = useState(false)
     const [deviceMenuPos, setDeviceMenuPos] = useState({ top: 0, left: 0 })
     const [expandedRow, setExpandedRow] = useState(null)
+    const [expandedPhotos, setExpandedPhotos] = useState({})
+    const [expandedPhotosLoading, setExpandedPhotosLoading] = useState({})
     const [currentPage, setCurrentPage] = useState(1)
     const ITEMS_PER_PAGE = 10
     const deviceMenuRef = useRef(null)
@@ -57,6 +59,35 @@ export default function DeploymentHistory({ showToast }) {
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [showDeviceMenu])
+
+    // Fetch photos when a row is expanded
+    useEffect(() => {
+        if (!expandedRow) return
+        if (expandedPhotos[expandedRow]) return // already loaded
+        setExpandedPhotosLoading(prev => ({ ...prev, [expandedRow]: true }))
+            ; (async () => {
+                try {
+                    const res = await fetch(`/api/deployments?id=${expandedRow}`)
+                    const json = await res.json()
+                    if (json.success && json.data.photos) {
+                        const photoPromises = json.data.photos.map(async (p) => {
+                            const pRes = await fetch(`/api/photos?id=${p.id}`)
+                            const pJson = await pRes.json()
+                            return pJson.success ? { ...p, data: pJson.data.data } : p
+                        })
+                        const loadedPhotos = await Promise.all(photoPromises)
+                        setExpandedPhotos(prev => ({ ...prev, [expandedRow]: loadedPhotos }))
+                    } else {
+                        setExpandedPhotos(prev => ({ ...prev, [expandedRow]: [] }))
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch photos:', e)
+                    setExpandedPhotos(prev => ({ ...prev, [expandedRow]: [] }))
+                } finally {
+                    setExpandedPhotosLoading(prev => ({ ...prev, [expandedRow]: false }))
+                }
+            })()
+    }, [expandedRow])
 
     const fetchData = useCallback(async () => {
         setLoading(true)
@@ -151,6 +182,7 @@ export default function DeploymentHistory({ showToast }) {
     const startEdit = (row) => {
         setEditing(true)
         setEditForm({ ...row })
+        setExpandedRow(row.id)
     }
 
     const cancelEdit = () => {
@@ -326,7 +358,7 @@ export default function DeploymentHistory({ showToast }) {
             formatDate(row.created_at),
         ])
 
-        doc.autoTable({
+        autoTable(doc, {
             startY: subtitle ? 30 : 25,
             head: [['#', 'Merchant', 'Device', 'Wi-Fi', 'Static IP', 'Anydesk', 'Printer IP', 'Checklist', 'Date']],
             body: tableData,
@@ -572,47 +604,175 @@ export default function DeploymentHistory({ showToast }) {
                                                 </div>
                                             </td>
                                         </tr>
-                                        {isExpanded && (
-                                            <tr key={row.id + '-detail'} style={{ background: 'var(--bg-hover)' }}>
-                                                <td colSpan={9} style={{ padding: 0 }}>
-                                                    <div style={{ padding: '14px 20px', fontSize: 12, lineHeight: 1.6 }}>
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                                                            <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>📋 {row.merchant_name}</strong>
-                                                            <div style={{ display: 'flex', gap: 6 }}>
-                                                                <button className="btn btn--secondary btn--sm"
-                                                                    onClick={e => { e.stopPropagation(); requestPassword(() => { openDetail(row); setTimeout(() => startEdit(row), 300); }) }}
-                                                                    title="Edit"
-                                                                    style={{ background: 'rgba(249,115,22,0.08)', borderColor: 'rgba(249,115,22,0.2)' }}
-                                                                >✏️ Edit</button>
-                                                                <button className="btn btn--secondary btn--sm"
-                                                                    onClick={e => { e.stopPropagation(); openDetail(row) }}
-                                                                    title="Full details"
-                                                                >📄 Full Details</button>
+                                        {isExpanded && (() => {
+                                            const isEditingThis = editing && editForm && editForm.id === row.id
+                                            const rowData = isEditingThis ? editForm : row
+                                            const rowPhotos = expandedPhotos[row.id] || []
+                                            const rowPhotosLoading = expandedPhotosLoading[row.id]
+                                            const rowDevicePhotos = rowPhotos.filter(p => p.category === 'device')
+                                            const rowPrinterPhotos = rowPhotos.filter(p => p.category === 'printer')
+                                            return (
+                                                <tr key={row.id + '-detail'} style={{ background: 'var(--bg-hover)' }}>
+                                                    <td colSpan={9} style={{ padding: 0 }}>
+                                                        <div style={{ padding: '14px 20px', fontSize: 12, lineHeight: 1.6 }}>
+                                                            {/* Header with Edit/Save buttons */}
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                                                <strong style={{ fontSize: 14, color: 'var(--text-primary)' }}>📋 {rowData.merchant_name}</strong>
+                                                                <div style={{ display: 'flex', gap: 6 }}>
+                                                                    {isEditingThis ? (
+                                                                        <>
+                                                                            <button className="btn btn--primary btn--sm"
+                                                                                onClick={e => { e.stopPropagation(); handleSaveClick() }}
+                                                                                disabled={saving}
+                                                                            >{saving ? 'Saving...' : '💾 Save'}</button>
+                                                                            <button className="btn btn--secondary btn--sm"
+                                                                                onClick={e => { e.stopPropagation(); cancelEdit() }}
+                                                                            >Cancel</button>
+                                                                        </>
+                                                                    ) : (
+                                                                        <button className="btn btn--secondary btn--sm"
+                                                                            onClick={e => { e.stopPropagation(); requestPassword(() => startEdit(row)) }}
+                                                                            title="Edit"
+                                                                            style={{ background: 'rgba(249,115,22,0.08)', borderColor: 'rgba(249,115,22,0.2)' }}
+                                                                        >✏️ Edit</button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Fields — editable or read-only */}
+                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px 24px' }}>
+                                                                {isEditingThis ? (
+                                                                    <>
+                                                                        <div>
+                                                                            <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>Merchant Name</div>
+                                                                            <input className="input" style={{ fontSize: 12, padding: '4px 8px' }}
+                                                                                value={editForm.merchant_name || ''}
+                                                                                onChange={e => setField('merchant_name', e.target.value)}
+                                                                                onClick={e => e.stopPropagation()} />
+                                                                        </div>
+                                                                        <div>
+                                                                            <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>Device Type</div>
+                                                                            <select className="input" style={{ fontSize: 12, padding: '4px 8px' }}
+                                                                                value={editForm.device_type}
+                                                                                onChange={e => setField('device_type', e.target.value)}
+                                                                                onClick={e => e.stopPropagation()}>
+                                                                                <option value="Sunmi Device">Sunmi Device</option>
+                                                                                <option value="Window">Window</option>
+                                                                                <option value="Other">Other</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div>
+                                                                            <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>Wi-Fi SSID</div>
+                                                                            <input className="input" style={{ fontSize: 12, padding: '4px 8px' }}
+                                                                                value={editForm.wifi_ssid || ''}
+                                                                                onChange={e => setField('wifi_ssid', e.target.value)}
+                                                                                onClick={e => e.stopPropagation()} />
+                                                                        </div>
+                                                                        <div>
+                                                                            <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>Static IP</div>
+                                                                            <input className="input" style={{ fontSize: 12, padding: '4px 8px' }}
+                                                                                value={editForm.static_ip || ''}
+                                                                                onChange={e => setField('static_ip', e.target.value)}
+                                                                                onClick={e => e.stopPropagation()} />
+                                                                        </div>
+                                                                        <div>
+                                                                            <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>Anydesk ID</div>
+                                                                            <input className="input" style={{ fontSize: 12, padding: '4px 8px' }}
+                                                                                value={editForm.anydesk_id || ''}
+                                                                                onChange={e => setField('anydesk_id', e.target.value)}
+                                                                                onClick={e => e.stopPropagation()} />
+                                                                        </div>
+                                                                        <div>
+                                                                            <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>Printer IP</div>
+                                                                            <textarea className="input" style={{ fontSize: 12, padding: '4px 8px', minHeight: 40 }}
+                                                                                value={editForm.printer_ip || ''}
+                                                                                onChange={e => setField('printer_ip', e.target.value)}
+                                                                                onClick={e => e.stopPropagation()} />
+                                                                        </div>
+                                                                        <div>
+                                                                            <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>Serial No</div>
+                                                                            <input className="input" style={{ fontSize: 12, padding: '4px 8px' }}
+                                                                                value={editForm.device_serial_number || ''}
+                                                                                onChange={e => setField('device_serial_number', e.target.value)}
+                                                                                onClick={e => e.stopPropagation()} />
+                                                                        </div>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <div><span style={{ color: 'var(--text-muted)' }}>Device:</span> {row.device_type}</div>
+                                                                        <div><span style={{ color: 'var(--text-muted)' }}>Wi-Fi:</span> {row.wifi_ssid}</div>
+                                                                        <div><span style={{ color: 'var(--text-muted)' }}>Static IP:</span> {row.static_ip}</div>
+                                                                        <div><span style={{ color: 'var(--text-muted)' }}>Anydesk:</span> {row.anydesk_id}</div>
+                                                                        <div><span style={{ color: 'var(--text-muted)' }}>Printer IP:</span> <span style={{ whiteSpace: 'pre-line' }}>{row.printer_ip || '—'}</span></div>
+                                                                        <div><span style={{ color: 'var(--text-muted)' }}>Serial No:</span> {row.device_serial_number || '—'}</div>
+                                                                        <div><span style={{ color: 'var(--text-muted)' }}>Date:</span> {formatDate(row.created_at)}</div>
+                                                                    </>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Checklist badges */}
+                                                            <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                                {CHECKLIST_ITEMS.map(item => {
+                                                                    const checked = isEditingThis ? editForm[item.key] : row[item.key]
+                                                                    return (
+                                                                        <span key={item.key}
+                                                                            onClick={isEditingThis ? (e) => { e.stopPropagation(); setField(item.key, checked ? 0 : 1) } : undefined}
+                                                                            style={{
+                                                                                padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 11,
+                                                                                background: checked ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.08)',
+                                                                                color: checked ? 'var(--success)' : 'var(--text-muted)',
+                                                                                fontWeight: checked ? 600 : 400,
+                                                                                cursor: isEditingThis ? 'pointer' : 'default',
+                                                                                border: isEditingThis ? '1px dashed var(--border-color)' : 'none',
+                                                                            }}>{checked ? '✓' : '✗'} {item.label}</span>
+                                                                    )
+                                                                })}
+                                                            </div>
+
+                                                            {/* Photos section */}
+                                                            <div style={{ marginTop: 14 }}>
+                                                                {rowPhotosLoading ? (
+                                                                    <div style={{ color: 'var(--text-muted)', fontSize: 11 }}>Loading photos...</div>
+                                                                ) : rowPhotos.length === 0 ? (
+                                                                    <div style={{ color: 'var(--text-muted)', fontSize: 11 }}>No photos</div>
+                                                                ) : (
+                                                                    <>
+                                                                        {rowDevicePhotos.length > 0 && (
+                                                                            <div style={{ marginBottom: 8 }}>
+                                                                                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
+                                                                                    📷 Device Photos ({rowDevicePhotos.length})
+                                                                                </div>
+                                                                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                                                                    {rowDevicePhotos.map(photo => (
+                                                                                        <img key={photo.id} src={photo.data} alt={photo.filename}
+                                                                                            onClick={e => { e.stopPropagation(); setExpandedPhoto(photo) }}
+                                                                                            style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid var(--border-color)' }} />
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                        {rowPrinterPhotos.length > 0 && (
+                                                                            <div>
+                                                                                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
+                                                                                    🖨️ Printer Photos ({rowPrinterPhotos.length})
+                                                                                </div>
+                                                                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                                                                    {rowPrinterPhotos.map(photo => (
+                                                                                        <img key={photo.id} src={photo.data} alt={photo.filename}
+                                                                                            onClick={e => { e.stopPropagation(); setExpandedPhoto(photo) }}
+                                                                                            style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid var(--border-color)' }} />
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px 24px' }}>
-                                                            <div><span style={{ color: 'var(--text-muted)' }}>Device:</span> {row.device_type}</div>
-                                                            <div><span style={{ color: 'var(--text-muted)' }}>Wi-Fi:</span> {row.wifi_ssid}</div>
-                                                            <div><span style={{ color: 'var(--text-muted)' }}>Static IP:</span> {row.static_ip}</div>
-                                                            <div><span style={{ color: 'var(--text-muted)' }}>Anydesk:</span> {row.anydesk_id}</div>
-                                                            <div><span style={{ color: 'var(--text-muted)' }}>Printer IP:</span> {row.printer_ip || '—'}</div>
-                                                            <div><span style={{ color: 'var(--text-muted)' }}>Serial No:</span> {row.device_serial_number || '—'}</div>
-                                                            <div><span style={{ color: 'var(--text-muted)' }}>Date:</span> {formatDate(row.created_at)}</div>
-                                                        </div>
-                                                        <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                                            {CHECKLIST_ITEMS.map(item => (
-                                                                <span key={item.key} style={{
-                                                                    padding: '3px 8px', borderRadius: 'var(--radius-sm)', fontSize: 11,
-                                                                    background: row[item.key] ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.08)',
-                                                                    color: row[item.key] ? 'var(--success)' : 'var(--text-muted)',
-                                                                    fontWeight: row[item.key] ? 600 : 400,
-                                                                }}>{row[item.key] ? '✓' : '✗'} {item.label}</span>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })()}
                                     </>
                                 )
                             })}
