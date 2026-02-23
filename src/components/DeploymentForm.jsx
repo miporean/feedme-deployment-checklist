@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const INITIAL_FORM = {
     merchant_name: '',
@@ -113,13 +113,34 @@ function PhotoUpload({ label, photos, maxPhotos, onAdd, onRemove }) {
 }
 
 export default function DeploymentForm({ onSuccess }) {
-    const [form, setForm] = useState(INITIAL_FORM)
-    const [devicePhotos, setDevicePhotos] = useState([])
-    const [printerPhotos, setPrinterPhotos] = useState([])
-    const [currentStep, setCurrentStep] = useState(0)
+    // Restore saved form data from localStorage
+    const savedDraft = typeof window !== 'undefined' ? (() => {
+        try { return JSON.parse(localStorage.getItem('deploymentFormDraft')) } catch { return null }
+    })() : null
+
+    const [form, setForm] = useState(savedDraft?.form || INITIAL_FORM)
+    const [devicePhotos, setDevicePhotos] = useState(savedDraft?.devicePhotos || [])
+    const [printerPhotos, setPrinterPhotos] = useState(savedDraft?.printerPhotos || [])
+    const [currentStep, setCurrentStep] = useState(savedDraft?.currentStep || 0)
     const [submitting, setSubmitting] = useState(false)
     const [submitted, setSubmitted] = useState(false)
     const [errors, setErrors] = useState({})
+
+    // Auto-save form data to localStorage on every change
+    useEffect(() => {
+        if (submitted) return // don't save after submit
+        try {
+            localStorage.setItem('deploymentFormDraft', JSON.stringify({
+                form, devicePhotos, printerPhotos, currentStep
+            }))
+        } catch (e) {
+            // localStorage full or unavailable, ignore
+        }
+    }, [form, devicePhotos, printerPhotos, currentStep, submitted])
+
+    const clearDraft = () => {
+        try { localStorage.removeItem('deploymentFormDraft') } catch { }
+    }
 
     const steps = getSteps(form.device_type)
     const step = steps[currentStep]
@@ -179,6 +200,7 @@ export default function DeploymentForm({ onSuccess }) {
                 if (data.warning) {
                     alert(data.warning)
                 }
+                clearDraft()
                 setSubmitted(true)
                 onSuccess?.()
             } else {
@@ -192,6 +214,7 @@ export default function DeploymentForm({ onSuccess }) {
     }
 
     const reset = () => {
+        clearDraft()
         setForm(INITIAL_FORM)
         setDevicePhotos([])
         setPrinterPhotos([])
