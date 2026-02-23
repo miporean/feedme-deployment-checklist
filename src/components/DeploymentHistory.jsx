@@ -204,10 +204,8 @@ export default function DeploymentHistory({ showToast }) {
             const json = await res.json()
             if (json.success) {
                 showToast('Record updated successfully')
-                setSelected(editForm)
                 setEditing(false)
                 setEditForm(null)
-                setShowConfirm(false)
                 fetchData()
             } else {
                 showToast('Failed to update: ' + (json.error || 'Unknown error'), 'error')
@@ -622,7 +620,7 @@ export default function DeploymentHistory({ showToast }) {
                                                                     {isEditingThis ? (
                                                                         <>
                                                                             <button className="btn btn--primary btn--sm"
-                                                                                onClick={e => { e.stopPropagation(); handleSaveClick() }}
+                                                                                onClick={e => { e.stopPropagation(); confirmSave() }}
                                                                                 disabled={saving}
                                                                             >{saving ? 'Saving...' : '💾 Save'}</button>
                                                                             <button className="btn btn--secondary btn--sm"
