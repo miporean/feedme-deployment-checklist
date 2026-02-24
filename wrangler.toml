@@ -6,3 +6,7 @@ pages_build_output_dir = "./dist"
 binding = "DB"
 database_name = "feedme-deployment-checklist-db"
 database_id = "2cfc573e-912a-4ab5-b7cc-998ec9e89126"
+
+[[r2_buckets]]
+binding = "PHOTOS"
+bucket_name = "feedme-deployment-photos"

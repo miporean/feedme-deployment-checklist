@@ -112,8 +112,7 @@ export async function onRequestPost(context) {
 
         const deploymentId = result.meta.last_row_id;
 
-        // Step 2: Filter and insert photos (each in its own try/catch)
-        const MAX_PHOTO_SIZE = 500000; // 500KB max per photo base64 string
+        // Step 2: Store photos in R2 and metadata in D1
         const allPhotos = [
             ...(device_photos || []).map(p => ({ ...p, category: 'device' })),
             ...(printer_photos || []).map(p => ({ ...p, category: 'printer' })),
@@ -123,17 +122,34 @@ export async function onRequestPost(context) {
         let photosSkipped = 0;
 
         for (const photo of allPhotos) {
-            // Skip photos without data or with oversized data
-            if (!photo.data || photo.data.length > MAX_PHOTO_SIZE) {
+            if (!photo.data) {
                 photosSkipped++;
                 continue;
             }
             try {
+                // Convert base64 data URL to binary for R2
+                const base64Data = photo.data.split(',')[1] || photo.data;
+                const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+
+                // Determine content type
+                const contentType = photo.data.includes('image/png') ? 'image/png' : 'image/jpeg';
+
+                // Store metadata in D1 (no photo data, just the R2 key)
+                const r2Key = `deployments/${deploymentId}/${photo.category}/${photo.filename}`;
+
                 await env.DB.prepare(
-                    'INSERT INTO deployment_photos (deployment_id, category, filename, data, created_at) VALUES (?, ?, ?, ?, ?)'
-                ).bind(deploymentId, photo.category, photo.filename, photo.data, myt).run();
+                    'INSERT INTO deployment_photos (deployment_id, category, filename, r2_key, created_at) VALUES (?, ?, ?, ?, ?)'
+                ).bind(deploymentId, photo.category, photo.filename, r2Key, myt).run();
+
+                // Store actual photo binary in R2
+                await env.PHOTOS.put(r2Key, binaryData, {
+                    httpMetadata: { contentType },
+                    customMetadata: { deploymentId: String(deploymentId), category: photo.category },
+                });
+
                 photosSaved++;
             } catch (photoErr) {
+                console.error('Photo upload error:', photoErr);
                 photosSkipped++;
             }
         }
@@ -144,7 +160,7 @@ export async function onRequestPost(context) {
                 id: deploymentId,
                 photos_saved: photosSaved,
                 photos_skipped: photosSkipped,
-                warning: photosSkipped > 0 ? `${photosSkipped} photo(s) were too large and skipped. Please clear browser cache and try again.` : undefined
+                warning: photosSkipped > 0 ? `${photosSkipped} photo(s) could not be saved.` : undefined
             }),
             { status: 201, headers: { 'Content-Type': 'application/json' } }
         );
@@ -233,7 +249,23 @@ export async function onRequestDelete(context) {
             );
         }
 
-        // Delete photos first, then deployment
+        // Get photos to delete from R2
+        const { results: photos } = await env.DB.prepare(
+            'SELECT r2_key FROM deployment_photos WHERE deployment_id = ?'
+        ).bind(id).all();
+
+        // Delete photos from R2
+        for (const photo of photos) {
+            if (photo.r2_key) {
+                try {
+                    await env.PHOTOS.delete(photo.r2_key);
+                } catch (e) {
+                    console.error('R2 delete error:', e);
+                }
+            }
+        }
+
+        // Delete from D1
         await env.DB.prepare('DELETE FROM deployment_photos WHERE deployment_id = ?').bind(id).run();
         await env.DB.prepare('DELETE FROM deployments WHERE id = ?').bind(id).run();
 

@@ -167,15 +167,25 @@ export default function DeploymentHistory({ showToast }) {
         setShowPasswordPrompt(true)
     }
 
-    const verifyPassword = () => {
-        if (passwordInput === 'Mipos123') {
-            setShowPasswordPrompt(false)
-            setPasswordInput('')
-            setPasswordError('')
-            if (pendingAction) pendingAction()
-            setPendingAction(null)
-        } else {
-            setPasswordError('Incorrect password')
+    const verifyPassword = async () => {
+        try {
+            const res = await fetch('/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: passwordInput }),
+            })
+            const data = await res.json()
+            if (data.success) {
+                setShowPasswordPrompt(false)
+                setPasswordInput('')
+                setPasswordError('')
+                if (pendingAction) pendingAction()
+                setPendingAction(null)
+            } else {
+                setPasswordError(data.error || 'Incorrect password')
+            }
+        } catch (e) {
+            setPasswordError('Network error')
         }
     }
 

@@ -31,7 +31,7 @@ function getSteps(deviceType) {
     return steps
 }
 
-function compressImage(file, maxSize = 800, quality = 0.5) {
+function compressImage(file, maxSize = 400, quality = 0.3) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader()
         reader.onload = (e) => {
