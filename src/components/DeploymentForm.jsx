@@ -484,7 +484,10 @@ export default function DeploymentForm({ onSuccess }) {
 
             {/* Navigation */}
             <div className="form-actions">
-                <button className="btn btn--secondary" onClick={prev} disabled={currentStep === 0}>← Back</button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn btn--secondary" onClick={prev} disabled={currentStep === 0}>← Back</button>
+                    <button className="btn btn--danger btn--sm" onClick={() => { if (confirm('Clear all form data?')) reset() }} title="Clear all fields">🗑️ Clear</button>
+                </div>
                 {currentStep < steps.length - 1 ? (
                     <button className="btn btn--primary" onClick={next}>Next →</button>
                 ) : (
