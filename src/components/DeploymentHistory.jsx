@@ -26,6 +26,7 @@ export default function DeploymentHistory({ showToast }) {
     const [editForm, setEditForm] = useState(null)
     const [saving, setSaving] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
+    const [pendingActionType, setPendingActionType] = useState('edit')
     const [expandedPhoto, setExpandedPhoto] = useState(null)
     const [sortField, setSortField] = useState('created_at')
     const [sortDir, setSortDir] = useState('desc')
@@ -160,8 +161,9 @@ export default function DeploymentHistory({ showToast }) {
     }
 
     // Password-protected actions
-    const requestPassword = (action) => {
+    const requestPassword = (action, actionType = 'edit') => {
         setPendingAction(() => action)
+        setPendingActionType(actionType)
         setPasswordInput('')
         setPasswordError('')
         setShowPasswordPrompt(true)
@@ -172,7 +174,7 @@ export default function DeploymentHistory({ showToast }) {
             const res = await fetch('/api/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: passwordInput }),
+                body: JSON.stringify({ password: passwordInput, action: pendingActionType }),
             })
             const data = await res.json()
             if (data.success) {
@@ -609,7 +611,7 @@ export default function DeploymentHistory({ showToast }) {
                                                     <button className="btn btn--secondary btn--sm" onClick={e => { e.stopPropagation(); setExpandedRow(isExpanded ? null : row.id) }} title={isExpanded ? 'Collapse' : 'View'}>
                                                         {isExpanded ? '🔽' : '👁️'}
                                                     </button>
-                                                    <button className="btn btn--danger btn--sm" onClick={e => { e.stopPropagation(); requestPassword(() => handleDelete(row.id)) }} title="Delete">🗑️</button>
+                                                    <button className="btn btn--danger btn--sm" onClick={e => { e.stopPropagation(); requestPassword(() => handleDelete(row.id), 'delete') }} title="Delete">🗑️</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -947,7 +949,7 @@ export default function DeploymentHistory({ showToast }) {
                             ) : (
                                 <>
                                     <button className="btn btn--primary" onClick={() => requestPassword(() => startEdit(selected))}>✏️ Edit</button>
-                                    <button className="btn btn--danger" onClick={() => requestPassword(() => handleDelete(selected.id))}>🗑️ Delete Record</button>
+                                    <button className="btn btn--danger" onClick={() => requestPassword(() => handleDelete(selected.id), 'delete')}>🗑️ Delete Record</button>
                                     <button className="btn btn--secondary" onClick={closeModal}>Close</button>
                                 </>
                             )}
@@ -995,9 +997,9 @@ export default function DeploymentHistory({ showToast }) {
                 <div className="modal-overlay" style={{ zIndex: 70 }} onClick={() => setShowPasswordPrompt(false)}>
                     <div className="modal" style={{ maxWidth: 380, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                         <div style={{ fontSize: 48, marginBottom: 12 }}>🔒</div>
-                        <h3 style={{ marginBottom: 6 }}>Password Required</h3>
+                        <h3 style={{ marginBottom: 6 }}>{pendingActionType === 'delete' ? '⚠️ Delete Confirmation' : '🔒 Password Required'}</h3>
                         <p style={{ color: 'var(--text-muted)', marginBottom: 16, fontSize: 13 }}>
-                            Enter password to continue
+                            {pendingActionType === 'delete' ? 'Enter delete password to permanently remove this record' : 'Enter password to edit this record'}
                         </p>
                         <input
                             className="input"

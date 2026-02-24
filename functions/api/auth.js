@@ -1,10 +1,59 @@
-// Backend password verification — password is never exposed to the frontend
-const ADMIN_PASSWORD = 'Mipos123'
+// Backend password verification — passwords are never exposed to the frontend
+// Edit password for modifying records, Delete password for removing records
+const PASSWORDS = {
+    edit: 'Mipos123',
+    delete: '123456',
+}
+
+// Simple in-memory rate limiter (per IP, resets on worker restart)
+const attempts = new Map()
+const MAX_ATTEMPTS = 5
+const LOCKOUT_MS = 5 * 60 * 1000 // 5 minutes
+
+function checkRateLimit(ip) {
+    const now = Date.now()
+    const record = attempts.get(ip)
+
+    if (!record) {
+        attempts.set(ip, { count: 1, firstAttempt: now })
+        return true
+    }
+
+    // Reset if lockout period has passed
+    if (now - record.firstAttempt > LOCKOUT_MS) {
+        attempts.set(ip, { count: 1, firstAttempt: now })
+        return true
+    }
+
+    if (record.count >= MAX_ATTEMPTS) {
+        return false // locked out
+    }
+
+    record.count++
+    return true
+}
+
+function clearRateLimit(ip) {
+    attempts.delete(ip)
+}
 
 export async function onRequestPost(context) {
     try {
+        const ip = context.request.headers.get('CF-Connecting-IP') || 'unknown'
+
+        // Rate limit check
+        if (!checkRateLimit(ip)) {
+            return new Response(JSON.stringify({
+                success: false,
+                error: 'Too many failed attempts. Please try again in 5 minutes.'
+            }), {
+                status: 429,
+                headers: { 'Content-Type': 'application/json' },
+            })
+        }
+
         const body = await context.request.json()
-        const { password } = body
+        const { password, action } = body
 
         if (!password) {
             return new Response(JSON.stringify({ success: false, error: 'Password required' }), {
@@ -12,7 +61,16 @@ export async function onRequestPost(context) {
             })
         }
 
-        if (password === ADMIN_PASSWORD) {
+        if (!action || !['edit', 'delete'].includes(action)) {
+            return new Response(JSON.stringify({ success: false, error: 'Valid action required (edit or delete)' }), {
+                status: 400, headers: { 'Content-Type': 'application/json' },
+            })
+        }
+
+        const expectedPassword = PASSWORDS[action]
+
+        if (password === expectedPassword) {
+            clearRateLimit(ip) // Reset on success
             return new Response(JSON.stringify({ success: true }), {
                 headers: { 'Content-Type': 'application/json' },
             })
