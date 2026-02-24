@@ -138,8 +138,8 @@ export async function onRequestPost(context) {
                 const r2Key = `deployments/${deploymentId}/${photo.category}/${photo.filename}`;
 
                 await env.DB.prepare(
-                    'INSERT INTO deployment_photos (deployment_id, category, filename, r2_key, created_at) VALUES (?, ?, ?, ?, ?)'
-                ).bind(deploymentId, photo.category, photo.filename, r2Key, myt).run();
+                    'INSERT INTO deployment_photos (deployment_id, category, filename, data, r2_key, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+                ).bind(deploymentId, photo.category, photo.filename, '', r2Key, myt).run();
 
                 // Store actual photo binary in R2
                 await env.PHOTOS.put(r2Key, binaryData, {
