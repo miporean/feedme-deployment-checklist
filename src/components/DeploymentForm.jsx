@@ -125,6 +125,7 @@ export default function DeploymentForm({ onSuccess }) {
     const [submitting, setSubmitting] = useState(false)
     const [submitted, setSubmitted] = useState(false)
     const [errors, setErrors] = useState({})
+    const [showClearConfirm, setShowClearConfirm] = useState(false)
 
     // Auto-save form data to localStorage on every change
     useEffect(() => {
@@ -486,7 +487,7 @@ export default function DeploymentForm({ onSuccess }) {
             <div className="form-actions">
                 <div style={{ display: 'flex', gap: 8 }}>
                     <button className="btn btn--secondary" onClick={prev} disabled={currentStep === 0}>← Back</button>
-                    <button className="btn btn--danger btn--sm" onClick={() => { if (confirm('Clear all form data?')) reset() }} title="Clear all fields">🗑️ Clear</button>
+                    <button className="btn btn--danger btn--sm" onClick={() => setShowClearConfirm(true)} title="Clear all fields">🗑️ Clear</button>
                 </div>
                 {currentStep < steps.length - 1 ? (
                     <button className="btn btn--primary" onClick={next}>Next →</button>
@@ -496,6 +497,23 @@ export default function DeploymentForm({ onSuccess }) {
                     </button>
                 )}
             </div>
+
+            {/* Confirm Clear Dialog */}
+            {showClearConfirm && (
+                <div className="modal-overlay" style={{ zIndex: 60 }} onClick={() => setShowClearConfirm(false)}>
+                    <div className="modal" style={{ maxWidth: 400, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ fontSize: 48, marginBottom: 16 }}>🧹</div>
+                        <h3 style={{ marginBottom: 8 }}>Clear Form</h3>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: 14 }}>
+                            Are you sure you want to clear all form data including uploaded photos?
+                        </p>
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                            <button className="btn btn--danger" onClick={() => { setShowClearConfirm(false); reset() }}>🗑️ Yes, Clear All</button>
+                            <button className="btn btn--secondary" onClick={() => setShowClearConfirm(false)}>❌ No, Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

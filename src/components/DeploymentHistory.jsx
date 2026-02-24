@@ -27,6 +27,8 @@ export default function DeploymentHistory({ showToast }) {
     const [saving, setSaving] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
     const [pendingActionType, setPendingActionType] = useState('edit')
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [pendingDeleteId, setPendingDeleteId] = useState(null)
     const [expandedPhoto, setExpandedPhoto] = useState(null)
     const [sortField, setSortField] = useState('created_at')
     const [sortDir, setSortDir] = useState('desc')
@@ -145,8 +147,15 @@ export default function DeploymentHistory({ showToast }) {
         setExpandedPhoto(null)
     }
 
-    const handleDelete = async (id) => {
-        if (!confirm('Are you sure you want to delete this deployment record?')) return
+    const requestDelete = (id) => {
+        setPendingDeleteId(id)
+        setShowDeleteConfirm(true)
+    }
+
+    const handleDelete = async () => {
+        const id = pendingDeleteId
+        setShowDeleteConfirm(false)
+        setPendingDeleteId(null)
         try {
             const res = await fetch(`/api/deployments?id=${id}`, { method: 'DELETE' })
             const json = await res.json()
@@ -611,7 +620,7 @@ export default function DeploymentHistory({ showToast }) {
                                                     <button className="btn btn--secondary btn--sm" onClick={e => { e.stopPropagation(); setExpandedRow(isExpanded ? null : row.id) }} title={isExpanded ? 'Collapse' : 'View'}>
                                                         {isExpanded ? '🔽' : '👁️'}
                                                     </button>
-                                                    <button className="btn btn--danger btn--sm" onClick={e => { e.stopPropagation(); requestPassword(() => handleDelete(row.id), 'delete') }} title="Delete">🗑️</button>
+                                                    <button className="btn btn--danger btn--sm" onClick={e => { e.stopPropagation(); requestPassword(() => requestDelete(row.id), 'delete') }} title="Delete">🗑️</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -949,7 +958,7 @@ export default function DeploymentHistory({ showToast }) {
                             ) : (
                                 <>
                                     <button className="btn btn--primary" onClick={() => requestPassword(() => startEdit(selected))}>✏️ Edit</button>
-                                    <button className="btn btn--danger" onClick={() => requestPassword(() => handleDelete(selected.id), 'delete')}>🗑️ Delete Record</button>
+                                    <button className="btn btn--danger" onClick={() => requestPassword(() => requestDelete(selected.id), 'delete')}>🗑️ Delete Record</button>
                                     <button className="btn btn--secondary" onClick={closeModal}>Close</button>
                                 </>
                             )}
@@ -987,6 +996,23 @@ export default function DeploymentHistory({ showToast }) {
                                 {saving ? <><span className="spinner" /> Saving...</> : '✅ Yes, Save'}
                             </button>
                             <button className="btn btn--secondary" onClick={() => setShowConfirm(false)}>❌ No, Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Delete Dialog */}
+            {showDeleteConfirm && (
+                <div className="modal-overlay" style={{ zIndex: 60 }} onClick={() => setShowDeleteConfirm(false)}>
+                    <div className="modal" style={{ maxWidth: 400, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ fontSize: 48, marginBottom: 16 }}>🗑️</div>
+                        <h3 style={{ marginBottom: 8 }}>Confirm Delete</h3>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: 14 }}>
+                            Are you sure you want to permanently delete this deployment record? This action cannot be undone.
+                        </p>
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                            <button className="btn btn--danger" onClick={handleDelete}>🗑️ Yes, Delete</button>
+                            <button className="btn btn--secondary" onClick={() => setShowDeleteConfirm(false)}>❌ No, Cancel</button>
                         </div>
                     </div>
                 </div>
