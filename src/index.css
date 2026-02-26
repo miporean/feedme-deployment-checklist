@@ -221,7 +221,7 @@ body::before {
   color: var(--accent-primary);
 }
 
-.user-badge__role--staff {
+.user-badge__role--partner {
   background: var(--info-bg);
   color: var(--info);
 }

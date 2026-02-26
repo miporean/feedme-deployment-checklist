@@ -11,7 +11,7 @@ CREATE TABLE users (
 );
 
 INSERT INTO users (name, pin, role) VALUES ('Admin', '7320', 'admin');
-INSERT INTO users (name, pin, role) VALUES ('Staff', '2677', 'staff');
+INSERT INTO users (name, pin, role) VALUES ('Partner', '2677', 'partner');
 
 CREATE TABLE deployments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

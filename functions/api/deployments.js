@@ -27,7 +27,7 @@ export async function onRequestGet(context) {
         let query, params;
 
         // Staff: only see their own submissions
-        if (role === 'staff' && userId) {
+        if (role === 'partner' && userId) {
             if (search) {
                 query = 'SELECT * FROM deployments WHERE submitted_by = ? AND (merchant_name LIKE ? OR device_type LIKE ?) ORDER BY created_at DESC';
                 params = [userId, `%${search}%`, `%${search}%`];
