@@ -5,6 +5,8 @@ export async function onRequestGet(context) {
         const url = new URL(context.request.url);
         const search = url.searchParams.get('search') || '';
         const id = url.searchParams.get('id');
+        const userId = url.searchParams.get('user_id');
+        const role = url.searchParams.get('role');
 
         // Get single deployment with photos
         if (id) {
@@ -22,12 +24,26 @@ export async function onRequestGet(context) {
             });
         }
 
-        let query = 'SELECT * FROM deployments ORDER BY created_at DESC';
-        let params = [];
+        let query, params;
 
-        if (search) {
-            query = 'SELECT * FROM deployments WHERE merchant_name LIKE ? OR device_type LIKE ? ORDER BY created_at DESC';
-            params = [`%${search}%`, `%${search}%`];
+        // Staff: only see their own submissions
+        if (role === 'staff' && userId) {
+            if (search) {
+                query = 'SELECT * FROM deployments WHERE submitted_by = ? AND (merchant_name LIKE ? OR device_type LIKE ?) ORDER BY created_at DESC';
+                params = [userId, `%${search}%`, `%${search}%`];
+            } else {
+                query = 'SELECT * FROM deployments WHERE submitted_by = ? ORDER BY created_at DESC';
+                params = [userId];
+            }
+        } else {
+            // Admin or no user: see all
+            if (search) {
+                query = 'SELECT * FROM deployments WHERE merchant_name LIKE ? OR device_type LIKE ? ORDER BY created_at DESC';
+                params = [`%${search}%`, `%${search}%`];
+            } else {
+                query = 'SELECT * FROM deployments ORDER BY created_at DESC';
+                params = [];
+            }
         }
 
         const { results } = await env.DB.prepare(query).bind(...params).all();
@@ -67,6 +83,7 @@ export async function onRequestPost(context) {
             check_custom_item, check_pax, check_customer_display,
             check_qr_order, check_close_counter,
             device_photos, printer_photos,
+            submitted_by,
         } = body;
 
         if (!merchant_name || !device_type || !wifi_ssid || !static_ip || !anydesk_id || !printer_ip) {
@@ -91,8 +108,9 @@ export async function onRequestPost(context) {
                 check_payment_method, check_custom_item,
                 check_pax, check_customer_display,
                 check_qr_order, check_close_counter,
+                submitted_by,
                 created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).bind(
             merchant_name, device_type,
             wifi_ssid, static_ip, anydesk_id, printer_ip,
@@ -107,6 +125,7 @@ export async function onRequestPost(context) {
             check_customer_display ? 1 : 0,
             check_qr_order ? 1 : 0,
             check_close_counter ? 1 : 0,
+            submitted_by || null,
             myt
         ).run();
 

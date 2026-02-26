@@ -169,7 +169,7 @@ function PhotoUpload({ label, photos, maxPhotos, onAdd, onRemove }) {
     )
 }
 
-export default function DeploymentForm({ onSuccess }) {
+export default function DeploymentForm({ user, onSuccess }) {
     // Restore saved form data from localStorage
     const savedDraft = typeof window !== 'undefined' ? (() => {
         try { return JSON.parse(localStorage.getItem('deploymentFormDraft')) } catch { return null }
@@ -246,6 +246,7 @@ export default function DeploymentForm({ onSuccess }) {
                 device_type: form.device_type === 'Other' ? form.other_device_type.trim() : form.device_type,
                 device_photos: devicePhotos.map(p => ({ filename: p.filename, data: p.data })),
                 printer_photos: printerPhotos.map(p => ({ filename: p.filename, data: p.data })),
+                submitted_by: user?.id || null,
             }
             delete payload.other_device_type
             const res = await fetch('/api/deployments', {

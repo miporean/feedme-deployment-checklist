@@ -15,7 +15,7 @@ const CHECKLIST_ITEMS = [
     { key: 'check_close_counter', label: 'Close Counter (Report)' },
 ]
 
-export default function DeploymentHistory({ showToast }) {
+export default function DeploymentHistory({ user, showToast }) {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
@@ -95,8 +95,14 @@ export default function DeploymentHistory({ showToast }) {
     const fetchData = useCallback(async () => {
         setLoading(true)
         try {
-            const params = search ? `?search=${encodeURIComponent(search)}` : ''
-            const res = await fetch(`/api/deployments${params}`)
+            const queryParams = new URLSearchParams()
+            if (search) queryParams.set('search', search)
+            if (user) {
+                queryParams.set('user_id', user.id)
+                queryParams.set('role', user.role)
+            }
+            const qs = queryParams.toString()
+            const res = await fetch(`/api/deployments${qs ? '?' + qs : ''}`)
             const json = await res.json()
             if (json.success) setData(json.data || [])
         } catch (e) {
@@ -104,7 +110,7 @@ export default function DeploymentHistory({ showToast }) {
         } finally {
             setLoading(false)
         }
-    }, [search])
+    }, [search, user])
 
     useEffect(() => { fetchData() }, [fetchData])
 

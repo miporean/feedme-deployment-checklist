@@ -1,6 +1,17 @@
 -- FeedMe Deployment Checklist Schema
 DROP TABLE IF EXISTS deployment_photos;
 DROP TABLE IF EXISTS deployments;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  pin TEXT NOT NULL UNIQUE,
+  role TEXT NOT NULL DEFAULT 'staff'  -- 'admin' or 'staff'
+);
+
+INSERT INTO users (name, pin, role) VALUES ('Admin', '7320', 'admin');
+INSERT INTO users (name, pin, role) VALUES ('Staff', '2677', 'staff');
 
 CREATE TABLE deployments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,6 +37,7 @@ CREATE TABLE deployments (
   check_qr_order INTEGER DEFAULT 0,
   check_close_counter INTEGER DEFAULT 0,
   
+  submitted_by INTEGER REFERENCES users(id),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

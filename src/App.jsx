@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react'
+import PinLogin from './components/PinLogin'
 import DeploymentForm from './components/DeploymentForm'
 import DeploymentHistory from './components/DeploymentHistory'
 
 function App() {
+    const [user, setUser] = useState(() => {
+        try { return JSON.parse(sessionStorage.getItem('dcUser')) } catch { return null }
+    })
     const [activeTab, setActiveTab] = useState('form')
     const [toast, setToast] = useState(null)
     const [theme, setTheme] = useState(() => {
@@ -23,6 +27,31 @@ function App() {
         setTimeout(() => setToast(null), 4000)
     }
 
+    const handleLogin = (userData) => {
+        setUser(userData)
+        try { sessionStorage.setItem('dcUser', JSON.stringify(userData)) } catch { }
+    }
+
+    const handleLogout = () => {
+        setUser(null)
+        try { sessionStorage.removeItem('dcUser') } catch { }
+    }
+
+    // Show PIN login screen if not authenticated
+    if (!user) {
+        return (
+            <div className="app">
+                <PinLogin onLogin={handleLogin} />
+                {/* Toast */}
+                {toast && (
+                    <div className={`toast toast--${toast.type}`}>
+                        {toast.type === 'success' ? '✅' : '❌'} {toast.message}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
     return (
         <div className="app">
             {/* Header */}
@@ -32,9 +61,19 @@ function App() {
                     <h1 className="header__title">FeedMe Deployment Checklist</h1>
                 </div>
                 <p className="header__subtitle">Track and manage device deployment status</p>
-                <button className="theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-                    {theme === 'light' ? '🌙' : '☀️'}
-                </button>
+                <div className="header__actions">
+                    <span className="user-badge">
+                        <span className="user-badge__icon">{user.role === 'admin' ? '👑' : '👤'}</span>
+                        <span className="user-badge__name">{user.name}</span>
+                        <span className={`user-badge__role user-badge__role--${user.role}`}>{user.role}</span>
+                    </span>
+                    <button className="btn btn--secondary btn--sm" onClick={handleLogout} title="Logout">
+                        🚪 Logout
+                    </button>
+                    <button className="theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+                        {theme === 'light' ? '🌙' : '☀️'}
+                    </button>
+                </div>
             </header>
 
             {/* Tabs */}
@@ -55,10 +94,10 @@ function App() {
 
             {/* Both always mounted, CSS show/hide to preserve form state */}
             <div className={`tab-content ${activeTab === 'form' ? 'tab-content--active' : ''}`}>
-                <DeploymentForm onSuccess={() => { showToast('Deployment submitted successfully!'); }} />
+                <DeploymentForm user={user} onSuccess={() => { showToast('Deployment submitted successfully!'); }} />
             </div>
             <div className={`tab-content ${activeTab === 'history' ? 'tab-content--active' : ''}`}>
-                <DeploymentHistory showToast={showToast} />
+                <DeploymentHistory user={user} showToast={showToast} />
             </div>
 
             {/* Toast */}
