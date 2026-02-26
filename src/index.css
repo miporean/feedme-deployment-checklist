@@ -1443,8 +1443,6 @@ textarea.input {
 
   .header__logo {
     gap: 8px;
-    padding-right: 50px;
-    /* make room for theme toggle */
   }
 
   .header__icon {
@@ -1461,15 +1459,32 @@ textarea.input {
 
   .header__subtitle {
     font-size: 11px;
-    padding-right: 50px;
+  }
+
+  .header__actions {
+    margin-top: 10px;
+    gap: 6px;
+  }
+
+  .user-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .user-badge__icon {
+    font-size: 14px;
+  }
+
+  .user-badge__role {
+    font-size: 9px;
+    padding: 1px 4px;
   }
 
   .theme-toggle {
-    top: 16px;
-    right: 0;
-    width: 38px;
-    height: 38px;
-    font-size: 18px;
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
   }
 
 
