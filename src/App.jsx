@@ -65,7 +65,6 @@ function App() {
                     <span className="user-badge">
                         <span className="user-badge__icon">{user.role === 'admin' ? '👑' : '👤'}</span>
                         <span className="user-badge__name">{user.name}</span>
-                        <span className={`user-badge__role user-badge__role--${user.role}`}>{user.role}</span>
                     </span>
                     <button className="btn btn--secondary btn--sm" onClick={handleLogout} title="Logout">
                         🚪 Logout
