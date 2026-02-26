@@ -100,16 +100,14 @@ function App() {
             </nav>
 
             {/* Tab content */}
-            <div className={`tab-content ${activeTab === 'form' ? 'tab-content--active' : ''}`}>
+            {activeTab === 'form' && (
                 <DeploymentForm user={user} onSuccess={() => { showToast('Deployment submitted successfully!'); }} />
-            </div>
-            <div className={`tab-content ${activeTab === 'history' ? 'tab-content--active' : ''}`}>
+            )}
+            {activeTab === 'history' && (
                 <DeploymentHistory user={user} showToast={showToast} />
-            </div>
-            {user.role === 'admin' && (
-                <div className={`tab-content ${activeTab === 'users' ? 'tab-content--active' : ''}`}>
-                    <UserManagement showToast={showToast} />
-                </div>
+            )}
+            {activeTab === 'users' && user.role === 'admin' && (
+                <UserManagement showToast={showToast} />
             )}
 
             {/* Toast */}
