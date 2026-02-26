@@ -185,6 +185,14 @@ body::before {
   flex-wrap: wrap;
 }
 
+.header-action-btn {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
 /* ===== User Badge ===== */
 .user-badge {
   display: inline-flex;
@@ -228,8 +236,8 @@ body::before {
 
 /* ===== Theme Toggle ===== */
 .theme-toggle {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-md);
   background: var(--bg-card);
   border: 1px solid var(--border-color);

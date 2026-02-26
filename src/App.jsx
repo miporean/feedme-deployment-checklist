@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import PinLogin from './components/PinLogin'
 import DeploymentForm from './components/DeploymentForm'
 import DeploymentHistory from './components/DeploymentHistory'
+import UserManagement from './components/UserManagement'
 
 function App() {
     const [user, setUser] = useState(() => {
@@ -42,7 +43,6 @@ function App() {
         return (
             <div className="app">
                 <PinLogin onLogin={handleLogin} />
-                {/* Toast */}
                 {toast && (
                     <div className={`toast toast--${toast.type}`}>
                         {toast.type === 'success' ? '✅' : '❌'} {toast.message}
@@ -62,14 +62,14 @@ function App() {
                 </div>
                 <p className="header__subtitle">Track and manage device deployment status</p>
                 <div className="header__actions">
-                    <span className="user-badge">
+                    <span className="header-action-btn user-badge">
                         <span className="user-badge__icon">{user.role === 'admin' ? '👑' : '👤'}</span>
                         <span className="user-badge__name">{user.name}</span>
                     </span>
-                    <button className="btn btn--secondary btn--sm" onClick={handleLogout} title="Logout">
+                    <button className="header-action-btn btn btn--secondary btn--sm" onClick={handleLogout} title="Logout">
                         🚪 Logout
                     </button>
-                    <button className="theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+                    <button className="header-action-btn theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
                         {theme === 'light' ? '🌙' : '☀️'}
                     </button>
                 </div>
@@ -89,15 +89,28 @@ function App() {
                 >
                     📊 Deployment History
                 </button>
+                {user.role === 'admin' && (
+                    <button
+                        className={`tabs__btn ${activeTab === 'users' ? 'tabs__btn--active' : ''}`}
+                        onClick={() => setActiveTab('users')}
+                    >
+                        👥 Users
+                    </button>
+                )}
             </nav>
 
-            {/* Both always mounted, CSS show/hide to preserve form state */}
+            {/* Tab content */}
             <div className={`tab-content ${activeTab === 'form' ? 'tab-content--active' : ''}`}>
                 <DeploymentForm user={user} onSuccess={() => { showToast('Deployment submitted successfully!'); }} />
             </div>
             <div className={`tab-content ${activeTab === 'history' ? 'tab-content--active' : ''}`}>
                 <DeploymentHistory user={user} showToast={showToast} />
             </div>
+            {user.role === 'admin' && (
+                <div className={`tab-content ${activeTab === 'users' ? 'tab-content--active' : ''}`}>
+                    <UserManagement showToast={showToast} />
+                </div>
+            )}
 
             {/* Toast */}
             {toast && (

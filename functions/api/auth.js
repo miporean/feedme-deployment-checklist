@@ -1,8 +1,14 @@
-// Backend password verification — passwords are never exposed to the frontend
-// Edit password for modifying records, Delete password for removing records
+// Backend password verification — role-based passwords
+// Admin and Partner have different edit/delete passwords
 const PASSWORDS = {
-    edit: 'Mipos123',
-    delete: '123456',
+    admin: {
+        edit: 'Mipos123',
+        delete: '123456',
+    },
+    partner: {
+        edit: 'Partner123',
+        delete: 'Delete123',
+    },
 }
 
 // Simple in-memory rate limiter (per IP, resets on worker restart)
@@ -53,7 +59,7 @@ export async function onRequestPost(context) {
         }
 
         const body = await context.request.json()
-        const { password, action } = body
+        const { password, action, role } = body
 
         if (!password) {
             return new Response(JSON.stringify({ success: false, error: 'Password required' }), {
@@ -67,7 +73,9 @@ export async function onRequestPost(context) {
             })
         }
 
-        const expectedPassword = PASSWORDS[action]
+        // Use role-based passwords, fallback to admin passwords if role not specified
+        const userRole = role && PASSWORDS[role] ? role : 'admin'
+        const expectedPassword = PASSWORDS[userRole][action]
 
         if (password === expectedPassword) {
             clearRateLimit(ip) // Reset on success

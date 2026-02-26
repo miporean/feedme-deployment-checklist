@@ -189,7 +189,7 @@ export default function DeploymentHistory({ user, showToast }) {
             const res = await fetch('/api/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: passwordInput, action: pendingActionType }),
+                body: JSON.stringify({ password: passwordInput, action: pendingActionType, role: user?.role }),
             })
             const data = await res.json()
             if (data.success) {
