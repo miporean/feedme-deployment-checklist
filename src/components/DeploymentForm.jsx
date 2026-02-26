@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 
 const INITIAL_FORM = {
     merchant_name: '',
@@ -66,9 +66,11 @@ function compressImage(file, maxSize = 400, quality = 0.3) {
 
 function PhotoUpload({ label, photos, maxPhotos, onAdd, onRemove }) {
     const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+    const [isDragging, setIsDragging] = useState(false)
+    const dragCounter = React.useRef(0)
 
-    const handleFiles = async (e) => {
-        const files = Array.from(e.target.files)
+    const processFiles = async (fileList) => {
+        const files = Array.from(fileList).filter(f => f.type.startsWith('image/'))
         const remaining = maxPhotos - photos.length
         const toProcess = files.slice(0, remaining)
 
@@ -80,34 +82,89 @@ function PhotoUpload({ label, photos, maxPhotos, onAdd, onRemove }) {
             const compressed = await compressImage(file)
             onAdd({ filename: file.name, data: compressed, preview: compressed })
         }
+    }
+
+    const handleFileInput = async (e) => {
+        await processFiles(e.target.files)
         e.target.value = ''
     }
 
+    const handleDragEnter = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        dragCounter.current++
+        if (dragCounter.current === 1) setIsDragging(true)
+    }
+
+    const handleDragLeave = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        dragCounter.current--
+        if (dragCounter.current === 0) setIsDragging(false)
+    }
+
+    const handleDragOver = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+    }
+
+    const handleDrop = async (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        dragCounter.current = 0
+        setIsDragging(false)
+        if (photos.length >= maxPhotos) return
+        await processFiles(e.dataTransfer.files)
+    }
+
+    const dragProps = photos.length < maxPhotos ? {
+        onDragEnter: handleDragEnter,
+        onDragLeave: handleDragLeave,
+        onDragOver: handleDragOver,
+        onDrop: handleDrop,
+    } : {}
 
     return (
         <div className="form-group">
             <label className="form-group__label">{label} ({photos.length}/{maxPhotos})</label>
-            <div className="photo-grid">
-                {photos.map((photo, i) => (
-                    <div key={i} className="photo-thumb">
-                        <img src={photo.preview} alt={photo.filename} />
-                        <button className="photo-thumb__remove" onClick={() => onRemove(i)} type="button">✕</button>
-                    </div>
-                ))}
-                {photos.length < maxPhotos && (
-                    <label className="photo-add">
-                        <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handleFiles}
-                            style={{ display: 'none' }}
-                        />
-                        <span className="photo-add__icon">📷</span>
-                        <span className="photo-add__text">Add Photo</span>
-                    </label>
-                )}
-            </div>
+            {photos.length === 0 ? (
+                /* Full drop zone when no photos exist */
+                <label className={`photo-dropzone${isDragging ? ' photo-dropzone--active' : ''}`} {...dragProps}>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleFileInput}
+                        style={{ display: 'none' }}
+                    />
+                    <span className="photo-dropzone__icon">{isDragging ? '📥' : '📷'}</span>
+                    <span className="photo-dropzone__title">{isDragging ? 'Drop photos here' : 'Drag & drop photos here'}</span>
+                    <span className="photo-dropzone__subtitle">or click to browse</span>
+                </label>
+            ) : (
+                /* Grid with inline drop support when photos already exist */
+                <div className={`photo-grid${isDragging ? ' photo-grid--dragover' : ''}`} {...dragProps}>
+                    {photos.map((photo, i) => (
+                        <div key={i} className="photo-thumb">
+                            <img src={photo.preview} alt={photo.filename} />
+                            <button className="photo-thumb__remove" onClick={() => onRemove(i)} type="button">✕</button>
+                        </div>
+                    ))}
+                    {photos.length < maxPhotos && (
+                        <label className="photo-add">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handleFileInput}
+                                style={{ display: 'none' }}
+                            />
+                            <span className="photo-add__icon">{isDragging ? '📥' : '📷'}</span>
+                            <span className="photo-add__text">{isDragging ? 'Drop here' : 'Add Photo'}</span>
+                        </label>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
