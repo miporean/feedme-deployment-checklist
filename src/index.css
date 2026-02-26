@@ -1013,6 +1013,7 @@ textarea.input {
 .btn--sm {
   padding: 6px 12px;
   font-size: 12px;
+  height: 36px;
 }
 
 .form-actions {

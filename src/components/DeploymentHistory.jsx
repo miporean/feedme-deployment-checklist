@@ -496,7 +496,7 @@ export default function DeploymentHistory({ user, showToast }) {
                         </div>
                     )}
                 </div>
-                <button className="btn btn--secondary" onClick={fetchData}>🔄</button>
+                <button className="btn btn--secondary btn--sm" onClick={fetchData}>🔄</button>
             </div>
 
             {loading ? (
