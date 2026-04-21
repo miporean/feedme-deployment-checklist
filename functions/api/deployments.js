@@ -5,8 +5,8 @@ export async function onRequestGet(context) {
         const url = new URL(context.request.url);
         const search = url.searchParams.get('search') || '';
         const id = url.searchParams.get('id');
-        const userId = url.searchParams.get('user_id');
-        const role = url.searchParams.get('role');
+        const roleId = url.searchParams.get('role_id');
+        const isAdmin = url.searchParams.get('is_admin') === '1';
 
         // Get single deployment with photos
         if (id) {
@@ -26,14 +26,19 @@ export async function onRequestGet(context) {
 
         let query, params;
 
-        // Staff: only see their own submissions
-        if (role === 'partner' && userId) {
+        // Role-based filtering: regular roles see deployments from users in the same role
+        if (!isAdmin && roleId) {
             if (search) {
-                query = 'SELECT * FROM deployments WHERE submitted_by = ? AND (merchant_name LIKE ? OR device_type LIKE ?) ORDER BY created_at DESC';
-                params = [userId, `%${search}%`, `%${search}%`];
+                query = `SELECT * FROM deployments
+                         WHERE submitted_by IN (SELECT id FROM users WHERE role_id = ?)
+                         AND (merchant_name LIKE ? OR device_type LIKE ?)
+                         ORDER BY created_at DESC`;
+                params = [roleId, `%${search}%`, `%${search}%`];
             } else {
-                query = 'SELECT * FROM deployments WHERE submitted_by = ? ORDER BY created_at DESC';
-                params = [userId];
+                query = `SELECT * FROM deployments
+                         WHERE submitted_by IN (SELECT id FROM users WHERE role_id = ?)
+                         ORDER BY created_at DESC`;
+                params = [roleId];
             }
         } else {
             // Admin or no user: see all
@@ -81,7 +86,7 @@ export async function onRequestPost(context) {
             windows_firewall_off, sunmi_remote_assistance, device_serial_number,
             check_socket_server_ip, check_printer_connection, check_payment_method,
             check_custom_item, check_pax, check_customer_display,
-            check_qr_order, check_close_counter,
+            check_qr_order, check_close_counter, remark,
             device_photos, printer_photos,
             submitted_by,
         } = body;
@@ -107,10 +112,10 @@ export async function onRequestPost(context) {
                 check_socket_server_ip, check_printer_connection,
                 check_payment_method, check_custom_item,
                 check_pax, check_customer_display,
-                check_qr_order, check_close_counter,
+                check_qr_order, check_close_counter, remark,
                 submitted_by,
                 created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).bind(
             merchant_name, device_type,
             wifi_ssid, static_ip, anydesk_id, printer_ip,
@@ -125,6 +130,7 @@ export async function onRequestPost(context) {
             check_customer_display ? 1 : 0,
             check_qr_order ? 1 : 0,
             check_close_counter ? 1 : 0,
+            remark || '',
             submitted_by || null,
             myt
         ).run();
@@ -211,7 +217,7 @@ export async function onRequestPut(context) {
             windows_firewall_off, sunmi_remote_assistance, device_serial_number,
             check_socket_server_ip, check_printer_connection, check_payment_method,
             check_custom_item, check_pax, check_customer_display,
-            check_qr_order, check_close_counter,
+            check_qr_order, check_close_counter, remark
         } = fields;
 
         await env.DB.prepare(`
@@ -223,7 +229,8 @@ export async function onRequestPut(context) {
                 check_socket_server_ip = ?, check_printer_connection = ?,
                 check_payment_method = ?, check_custom_item = ?,
                 check_pax = ?, check_customer_display = ?,
-                check_qr_order = ?, check_close_counter = ?
+                check_qr_order = ?, check_close_counter = ?,
+                remark = ?
             WHERE id = ?
         `).bind(
             merchant_name, device_type,
@@ -239,6 +246,7 @@ export async function onRequestPut(context) {
             check_customer_display ? 1 : 0,
             check_qr_order ? 1 : 0,
             check_close_counter ? 1 : 0,
+            remark || '',
             id
         ).run();
 

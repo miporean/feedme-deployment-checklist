@@ -2,16 +2,27 @@
 DROP TABLE IF EXISTS deployment_photos;
 DROP TABLE IF EXISTS deployments;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS roles;
+
+CREATE TABLE roles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  is_admin INTEGER DEFAULT 0  -- 1 = admin role (can view all), 0 = regular role
+);
+
+INSERT INTO roles (name, is_admin) VALUES ('Admin', 1);
+INSERT INTO roles (name, is_admin) VALUES ('Partner', 0);
 
 CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   pin TEXT NOT NULL UNIQUE,
-  role TEXT NOT NULL DEFAULT 'staff'  -- 'admin' or 'staff'
+  role_id INTEGER NOT NULL DEFAULT 2,
+  FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
-INSERT INTO users (name, pin, role) VALUES ('Admin', '7320', 'admin');
-INSERT INTO users (name, pin, role) VALUES ('Partner', '2677', 'partner');
+INSERT INTO users (name, pin, role_id) VALUES ('Admin', '7320', 1);
+INSERT INTO users (name, pin, role_id) VALUES ('Partner', '2677', 2);
 
 CREATE TABLE deployments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,6 +47,7 @@ CREATE TABLE deployments (
   check_customer_display INTEGER DEFAULT 0,
   check_qr_order INTEGER DEFAULT 0,
   check_close_counter INTEGER DEFAULT 0,
+  remark TEXT DEFAULT '',
   
   submitted_by INTEGER REFERENCES users(id),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP

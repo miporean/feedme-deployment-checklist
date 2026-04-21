@@ -1,4 +1,4 @@
-// PIN Login endpoint — verifies a 4-digit PIN and returns user info
+// PIN Login endpoint — verifies a 4-digit PIN and returns user info with role
 const attempts = new Map()
 const MAX_ATTEMPTS = 5
 const LOCKOUT_MS = 5 * 60 * 1000 // 5 minutes
@@ -47,14 +47,23 @@ export async function onRequestPost(context) {
         }
 
         const user = await context.env.DB.prepare(
-            'SELECT id, name, role FROM users WHERE pin = ?'
+            `SELECT u.id, u.name, u.role_id, r.name as role_name, r.is_admin
+             FROM users u
+             LEFT JOIN roles r ON u.role_id = r.id
+             WHERE u.pin = ?`
         ).bind(pin).first()
 
         if (user) {
             clearRateLimit(ip)
             return new Response(JSON.stringify({
                 success: true,
-                user: { id: user.id, name: user.name, role: user.role }
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    role_id: user.role_id,
+                    role_name: user.role_name,
+                    is_admin: user.is_admin === 1
+                }
             }), {
                 headers: { 'Content-Type': 'application/json' },
             })

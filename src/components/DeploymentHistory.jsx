@@ -98,8 +98,8 @@ export default function DeploymentHistory({ user, showToast }) {
             const queryParams = new URLSearchParams()
             if (search) queryParams.set('search', search)
             if (user) {
-                queryParams.set('user_id', user.id)
-                queryParams.set('role', user.role)
+                queryParams.set('role_id', user.role_id)
+                queryParams.set('is_admin', user.is_admin ? '1' : '0')
             }
             const qs = queryParams.toString()
             const res = await fetch(`/api/deployments${qs ? '?' + qs : ''}`)
@@ -341,6 +341,7 @@ export default function DeploymentHistory({ user, showToast }) {
             'Anydesk ID': row.anydesk_id,
             'Printer IP': row.printer_ip,
             'Serial Number': row.device_serial_number || '',
+            'Remark': row.remark || '',
             ...Object.fromEntries(CHECKLIST_ITEMS.map(item => [item.label, row[item.key] ? '✓' : '—'])),
             'Checklist': `${countChecks(row)}/8`,
             'Date': formatDate(row.created_at),
@@ -722,6 +723,13 @@ export default function DeploymentHistory({ user, showToast }) {
                                                                                 onChange={e => setField('device_serial_number', e.target.value)}
                                                                                 onClick={e => e.stopPropagation()} />
                                                                         </div>
+                                                                        <div style={{ gridColumn: '1 / -1' }}>
+                                                                            <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>Remark</div>
+                                                                            <textarea className="input" style={{ fontSize: 12, padding: '4px 8px', minHeight: 40 }}
+                                                                                value={editForm.remark || ''}
+                                                                                onChange={e => setField('remark', e.target.value)}
+                                                                                onClick={e => e.stopPropagation()} />
+                                                                        </div>
                                                                     </>
                                                                 ) : (
                                                                     <>
@@ -731,6 +739,7 @@ export default function DeploymentHistory({ user, showToast }) {
                                                                         <div><span style={{ color: 'var(--text-muted)' }}>Anydesk:</span> {row.anydesk_id}</div>
                                                                         <div><span style={{ color: 'var(--text-muted)' }}>Printer IP:</span> <span style={{ whiteSpace: 'pre-line' }}>{row.printer_ip || '—'}</span></div>
                                                                         <div><span style={{ color: 'var(--text-muted)' }}>Serial No:</span> {row.device_serial_number || '—'}</div>
+                                                                        <div style={{ gridColumn: '1 / -1' }}><span style={{ color: 'var(--text-muted)' }}>Remark:</span> <span style={{ whiteSpace: 'pre-line' }}>{row.remark || '—'}</span></div>
                                                                         <div><span style={{ color: 'var(--text-muted)' }}>Date:</span> {formatDate(row.created_at)}</div>
                                                                     </>
                                                                 )}

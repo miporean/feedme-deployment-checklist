@@ -19,6 +19,7 @@ const INITIAL_FORM = {
     check_customer_display: false,
     check_qr_order: false,
     check_close_counter: false,
+    remark: '',
 }
 
 function getSteps(deviceType) {
@@ -27,7 +28,7 @@ function getSteps(deviceType) {
     if (deviceType === 'Sunmi Device') steps.push({ key: 'sunmi', label: 'Sunmi' })
     steps.push({ key: 'device', label: 'Device' })
     steps.push({ key: 'feedme', label: 'FeedMe' })
-    steps.push({ key: 'photos', label: 'Photos' })
+    steps.push({ key: 'photos', label: 'Remark & Photo' })
     return steps
 }
 
@@ -515,12 +516,17 @@ export default function DeploymentForm({ user, onSuccess }) {
                 </div>
             )}
 
-            {/* Step: Photos */}
+            {/* Step: Photos & Remark */}
             {step.key === 'photos' && (
                 <div className="card">
                     <div className="card__header">
-                        <div className="card__icon card__icon--purple">📸</div>
-                        <div><div className="card__title">Upload Photos</div><div className="card__subtitle">Section 6 — Device & printer test photos</div></div>
+                        <div className="card__icon card__icon--purple">📝</div>
+                        <div><div className="card__title">Remark & Photo</div><div className="card__subtitle">Section 4 — Device, printer test photos & Remark</div></div>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 24 }}>
+                        <label className="form-group__label">Remark</label>
+                        <textarea className="input" placeholder="Enter any additional remarks..." value={form.remark} onChange={e => set('remark', e.target.value)} style={{ minHeight: 80 }} />
                     </div>
 
                     <PhotoUpload

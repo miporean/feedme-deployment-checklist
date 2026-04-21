@@ -56,23 +56,25 @@ function App() {
         <div className="app">
             {/* Header */}
             <header className="header">
+                <div className="header__topbar">
+                    <span className="header-action-btn user-badge">
+                        <span className="user-badge__icon">{user.is_admin ? '👑' : '👤'}</span>
+                        <span className="user-badge__name">{user.name}</span>
+                    </span>
+                    <div className="header__topbar-right">
+                        <button className="header-action-btn btn btn--secondary btn--sm" onClick={handleLogout} title="Logout">
+                            🚪 Logout
+                        </button>
+                        <button className="header-action-btn theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+                            {theme === 'light' ? '🌙' : '☀️'}
+                        </button>
+                    </div>
+                </div>
                 <div className="header__logo">
                     <div className="header__icon">🚀</div>
                     <h1 className="header__title">FeedMe Deployment Checklist</h1>
                 </div>
                 <p className="header__subtitle">Track and manage device deployment status</p>
-                <div className="header__actions">
-                    <span className="header-action-btn user-badge">
-                        <span className="user-badge__icon">{user.role === 'admin' ? '👑' : '👤'}</span>
-                        <span className="user-badge__name">{user.name}</span>
-                    </span>
-                    <button className="header-action-btn btn btn--secondary btn--sm" onClick={handleLogout} title="Logout">
-                        🚪 Logout
-                    </button>
-                    <button className="header-action-btn theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-                        {theme === 'light' ? '🌙' : '☀️'}
-                    </button>
-                </div>
             </header>
 
             {/* Tabs */}
@@ -89,7 +91,7 @@ function App() {
                 >
                     📊 Deployment History
                 </button>
-                {user.role === 'admin' && (
+                {user.is_admin && (
                     <button
                         className={`tabs__btn ${activeTab === 'users' ? 'tabs__btn--active' : ''}`}
                         onClick={() => setActiveTab('users')}
@@ -106,7 +108,7 @@ function App() {
             {activeTab === 'history' && (
                 <DeploymentHistory user={user} showToast={showToast} />
             )}
-            {activeTab === 'users' && user.role === 'admin' && (
+            {activeTab === 'users' && user.is_admin && (
                 <UserManagement showToast={showToast} />
             )}
 
